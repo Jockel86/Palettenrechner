@@ -46,15 +46,32 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, d
 st.sidebar.header("Darstellung")
 theme_mode = st.sidebar.radio("Modus wählen:", ["Dunkelmodus", "Hellmodus"])
 
-# Farben je nach Modus für die HTML-Balken definieren
+# CSS-Styling je nach gewähltem Modus definieren
 if theme_mode == "Dunkelmodus":
+    bg_color = "#0e1117"
     text_color = "#FAFAFA"
     bg_bar_color = "#262730"
     border_bar_color = "#41424C"
+    sidebar_bg = "#262730"
 else:
+    bg_color = "#FFFFFF"
     text_color = "#31333F"
     bg_bar_color = "#E0E2EC"
     border_bar_color = "#D1D3D9"
+    sidebar_bg = "#F0F2F6"
+
+# CSS-Injektion für echtes Umschalten von Hintergrund und Textfarben
+st.markdown(f"""
+    <style>
+    .stApp {{
+        background-color: {bg_color};
+        color: {text_color};
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: {sidebar_bg};
+    }}
+    </style>
+""", unsafe_allow_html=True)
 
 # Streamlit UI
 st.title("Profi-Stack Planer")
@@ -189,4 +206,4 @@ if st.button("Berechnung starten", type="primary"):
 
 # Signatur am Fuß der Seite
 st.markdown("---")
-st.markdown("<div style='text-align: right; color: gray; font-size: 12px;'>Jochen Vortkamp 2026</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='text-align: right; color: gray; font-size: 12px;'>Jochen Vortkamp 2026</div>", unsafe_allow_html=True)
