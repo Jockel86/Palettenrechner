@@ -58,12 +58,12 @@ else:
     laenge_mm, breite_mm = standard_masse[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
 
-# Stärke: Dropdown mit vordefinierten Werten + Option für individuelle Eingabe
+# Stärke: Dropdown mit vordefinierten Werten + Option für individuelle Eingabe mit +/- Buttons
 staerke_optionen = [6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, "Individuell..."]
 ausgewaehlte_staerke = st.selectbox("Stärke in mm:", staerke_optionen, index=2) # Standardmäßig 10 mm (Index 2)
 
 if ausgewaehlte_staerke == "Individuell...":
-    staerke_mm = st.number_input("Individuelle Stärke in mm:", min_value=1, value=12, step=1)
+    staerke_mm = st.number_input("Individuelle Stärke in mm (in 1mm Schritten):", min_value=1, value=12, step=1)
 else:
     staerke_mm = int(ausgewaehlte_staerke)
 
