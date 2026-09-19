@@ -4,7 +4,16 @@ import streamlit as st
 PE_DICHTE = 0.95
 MAX_STAPELHOEHE_MM = 1000  # Maximale empfohlene Stapelhöhe für das Handling
 
-# Liste der verfügbaren Standard-Paletten-/Plattenmaße (Länge, Breite in mm)
+# Mapping für Standard-Namen und deren Maße
+STANDARD_MASSE = {
+    "2x1": (2050, 1020), 
+    "2x1.25": (2030, 1250), 
+    "3x1": (3050, 1020), 
+    "3x1.25": (3050, 1250), 
+    "3x2": (3050, 2080)
+}
+
+# Erweiterte Liste aller Standardpaletten für die Sonderformat-Prüfung
 STANDARD_PALETTEN = [
     (1100, 1100), (1200, 800), (1100, 1300), 
     (2050, 1020), (2050, 1250), (3050, 1020), (3050, 1250), 
@@ -13,7 +22,6 @@ STANDARD_PALETTEN = [
 ]
 
 def finde_passende_paletten(laenge, breite):
-    """Findet alle Standardpaletten, auf die die Plattenmaße (auch gedreht) passen."""
     passende = []
     for pl, pb in STANDARD_PALETTEN:
         if (laenge <= pl and breite <= pb) or (laenge <= pb and breite <= pl):
@@ -98,7 +106,7 @@ var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"])
 
 standard_option = "2x1"
 if var_zuschnitt == "Standard":
-    options = ["2x1", "2x1.25", "3x1", "3x1.25", "3x2"]
+    options = list(STANDARD_MASSE.keys())
     standard_option = st.selectbox("Wähle eine Standardgröße:", options)
 
 # Eingabefelder für individuelle oder Standardmaße
@@ -106,14 +114,7 @@ if var_zuschnitt == "Individuell":
     laenge_mm = st.number_input("Länge in mm:", min_value=1, value=2000, step=1)
     breite_mm = st.number_input("Breite in mm:", min_value=1, value=1000, step=1)
 else:
-    standard_masse = {
-        "2x1": (2050, 1020), 
-        "2x1.25": (2030, 1250), 
-        "3x1": (3050, 1020), 
-        "3x1.25": (3050, 1250), 
-        "3x2": (3050, 2080)
-    }
-    laenge_mm, breite_mm = standard_masse[standard_option]
+    laenge_mm, breite_mm = STANDARD_MASSE[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
 
 # Session State für die Stärke initialisieren
@@ -156,9 +157,23 @@ if st.button("Berechnung starten", type="primary"):
             benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = berechne_maximale_stueckzahl(
                 laenge_mm, breite_mm, staerke_mm, stueckzahl, PE_DICHTE, max_gewicht_pro_palette)
 
-            st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
-            
-            # Passende Standardpaletten ermitteln und direkt anzeigen
+            # Ermitteln, ob es einem bekannten Standardnamen entspricht
+            paletten_bezeichnung = ""
+            if var_zuschnitt == "Standard":
+                paletten_bezeichnung = standard_option
+            else:
+                for name, (l, b) in STANDARD_MASSE.items():
+                    if (laenge_mm == l and breite_mm == b) or (laenge_mm == b and breite_mm == l):
+                        paletten_bezeichnung = name
+                        break
+
+            # Hauptausgabe mit integrierter Bezeichnung falls Standard
+            if paletten_bezeichnung:
+                st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n) {paletten_bezeichnung}**.")
+            else:
+                st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
+
+            # Passende Paletten / Hinweis anzeigen
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             if passende_pals:
                 paletten_text = ", ".join(passende_pals)
