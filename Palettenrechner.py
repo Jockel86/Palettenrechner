@@ -9,7 +9,14 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, m
     dichte_material = 1  # kg pro Kubikmeter (Materialdichte)
     gewicht_pro_stueck = volumen_pro_stueck * dichte_material
 
+    # Vermeidung von Division durch Null, falls Stückzahl oder Maße 0 sind
+    if gewicht_pro_stueck <= 0 or stueckzahl <= 0:
+        return 0, [], [], []
+
     max_stueckzahl_pro_palette = int(max_gewicht_pro_palette / gewicht_pro_stueck)
+    if max_stueckzahl_pro_palette <= 0:
+        max_stueckzahl_pro_palette = 1
+
     benoetigte_paletten = (stueckzahl + max_stueckzahl_pro_palette - 1) // max_stueckzahl_pro_palette
 
     stueckzahl_pro_palette = stueckzahl // benoetigte_paletten
@@ -49,11 +56,11 @@ if var_zuschnitt == "Individuell":
 else:
     # Voreinstellungen für Standardmaße gemäß der Berechnungslogik im Original
     standard_masse = {
-        "2x1": (2050, 1020), 
-        "2x1.25": (2030, 1250), 
-        "3x1": (3050, 1020), 
-        "3x1.25": (3050, 1250), 
-        "3x2": (3050, 2080)
+        "2x1": (2000, 1000), 
+        "2x1.25": (2000, 1250), 
+        "3x1": (3000, 1000), 
+        "3x1.25": (3000, 1250), 
+        "3x2": (3000, 2000)
     }
     laenge_mm, breite_mm = standard_masse[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
@@ -87,35 +94,38 @@ with col_input:
         key="staerke_val"
     )
 
-stueckzahl = st.number_input("Stückzahl:", min_value=1, value=100, step=1)
+stueckzahl = st.number_input("Stückzahl:", min_value=0, value=0, step=1)
 max_gewicht_pro_palette = st.number_input("Maximales Gewicht pro Palette in kg:", value=1050.0, step=50.0)
 
 # Berechnungs-Button
 if st.button("Berechnung starten", type="primary"):
     try:
-        benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = berechne_maximale_stueckzahl(
-            laenge_mm, breite_mm, staerke_mm, stueckzahl, max_gewicht_pro_palette)
+        if stueckzahl <= 0:
+            st.warning("Bitte gib eine Stückzahl größer als 0 ein.")
+        else:
+            benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = berechne_maximale_stueckzahl(
+                laenge_mm, breite_mm, staerke_mm, stueckzahl, max_gewicht_pro_palette)
 
-        ergebnis_text = f"Du benötigst für deine Berechnung **{benoetigte_paletten} Palette(n)**.\n\n"
+            ergebnis_text = f"Du benötigst für deine Berechnung **{benoetigte_paletten} Palette(n)**.\n\n"
 
-        paletten_ergebnisse = {}
-        for i in range(benoetigte_paletten):
-            stueck = stueckzahlen[i]
-            gesamtgewicht = round(gewichte[i], 2)
-            stapelhoehe = round(stapelhoehen[i], 2)
-            key = f"{stueck} Stück"
-            if key in paletten_ergebnisse:
-                paletten_ergebnisse[key]["count"] += 1
-            else:
-                paletten_ergebnisse[key] = {"count": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe}
+            paletten_ergebnisse = {}
+            for i in range(benoetigte_paletten):
+                stueck = stueckzahlen[i]
+                gesamtgewicht = round(gewichte[i], 2)
+                stapelhoehe = round(stapelhoehen[i], 2)
+                key = f"{stueck} Stück"
+                if key in paletten_ergebnisse:
+                    paletten_ergebnisse[key]["count"] += 1
+                else:
+                    paletten_ergebnisse[key] = {"count": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe}
 
-        for key, value in paletten_ergebnisse.items():
-            ergebnis_text += f"- **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / {value['hoehe']} mm hoch*)\n"
+            for key, value in paletten_ergebnisse.items():
+                ergebnis_text += f"- **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / {value['hoehe']} mm hoch*)\n"
 
-        if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
-            ergebnis_text += "\n\n⚠️ **Hinweis:** Die Abmessungen könnten Sonderpaletten erfordern. Diese müssen evtl. den IPPC-Standard haben."
+            if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
+                ergebnis_text += "\n\n⚠️ **Hinweis:** Die Abmessungen könnten Sonderpaletten erfordern. Diese müssen evtl. den IPPC-Standard haben."
 
-        st.markdown(ergebnis_text)
+            st.markdown(ergebnis_text)
 
     except Exception as e:
         st.error(f"Fehler: {str(e)}")
