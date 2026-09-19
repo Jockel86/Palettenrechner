@@ -43,7 +43,7 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, d
     return benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen
 
 # Streamlit UI
-st.title("JV PalettenMaster")
+st.title("Profi-Stack Planer")
 st.caption("Fokus: PE-Platten (Dichte: 0.95 g/cm³) | Max. empfohlene Stapelhöhe: 1000 mm")
 
 # Auswahl für Zuschnitt
@@ -60,11 +60,11 @@ if var_zuschnitt == "Individuell":
     breite_mm = st.number_input("Breite in mm:", min_value=1, value=1000, step=1)
 else:
     standard_masse = {
-        "2x1": (2000, 1000), 
-        "2x1.25": (2000, 1250), 
-        "3x1": (3000, 1000), 
-        "3x1.25": (3000, 1250), 
-        "3x2": (3000, 2000)
+        "2x1": (2050, 1020), 
+        "2x1.25": (2030, 1250), 
+        "3x1": (3050, 1020), 
+        "3x1.25": (3050, 1250), 
+        "3x2": (3050, 2080)
     }
     laenge_mm, breite_mm = standard_masse[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
