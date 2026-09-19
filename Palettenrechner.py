@@ -39,7 +39,7 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, m
     return benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen
 
 # Streamlit UI
-st.title("Palettenrechner")
+st.title("Profi-StackCalc")
 
 # Auswahl für Zuschnitt
 var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"])
