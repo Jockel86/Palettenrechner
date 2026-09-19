@@ -49,11 +49,11 @@ if var_zuschnitt == "Individuell":
 else:
     # Voreinstellungen für Standardmaße gemäß der Berechnungslogik im Original
     standard_masse = {
-        "2x1": (2000, 1000), 
-        "2x1.25": (2000, 1250), 
-        "3x1": (3000, 1000), 
-        "3x1.25": (3000, 1250), 
-        "3x2": (3000, 2000)
+        "2x1": (2050, 1020), 
+        "2x1.25": (2030, 1250), 
+        "3x1": (3050, 1020), 
+        "3x1.25": (3050, 1250), 
+        "3x2": (3050, 2080)
     }
     laenge_mm, breite_mm = standard_masse[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
