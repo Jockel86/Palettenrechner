@@ -1,13 +1,17 @@
 import streamlit as st
 
-def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, max_gewicht_pro_palette=1050):
+# Feste Dichte für PE (Polyethylen) in g/cm³ bzw. kg/dm³
+PE_DICHTE = 0.95
+
+def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1050):
     laenge_meter = laenge_mm / 1000
     breite_meter = breite_mm / 1000
-    staerke_meter = staerke_mm / 1  # 1-zu-1 aus dem Original übernommen
+    staerke_meter = staerke_mm / 1000  # mm zu Meter für die Volumenberechnung
 
     volumen_pro_stueck = laenge_meter * breite_meter * staerke_meter
-    dichte_material = 1  # kg pro Kubikmeter (Materialdichte)
-    gewicht_pro_stueck = volumen_pro_stueck * dichte_material
+    dichte_kg_m3 = dichte_material * 1000  # Umrechnung in kg/m³
+    
+    gewicht_pro_stueck = volumen_pro_stueck * dichte_kg_m3
 
     if gewicht_pro_stueck <= 0 or stueckzahl <= 0:
         return 0, [], [], []
@@ -39,6 +43,7 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, m
 
 # Streamlit UI
 st.title("JV PalettenMaster")
+st.caption("Fokus: PE-Platten (Dichte: 0.95 g/cm³)")
 
 # Auswahl für Zuschnitt
 var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"])
@@ -101,7 +106,7 @@ if st.button("Berechnung starten", type="primary"):
             st.warning("Bitte gib eine Stückzahl größer als 0 ein.")
         else:
             benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = berechne_maximale_stueckzahl(
-                laenge_mm, breite_mm, staerke_mm, stueckzahl, max_gewicht_pro_palette)
+                laenge_mm, breite_mm, staerke_mm, stueckzahl, PE_DICHTE, max_gewicht_pro_palette)
 
             st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
             st.markdown("---")
@@ -130,7 +135,6 @@ if st.button("Berechnung starten", type="primary"):
                 gesamtgewicht = round(gewichte[i], 2)
                 stapelhoehe = round(stapelhoehen[i], 2)
                 
-                # Prozentualer Anteil vom Maximalgewicht (maximal 1.0 / 100%)
                 auslastung = min(gesamtgewicht / max_gewicht_pro_palette, 1.0)
                 
                 st.progress(
