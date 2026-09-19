@@ -140,22 +140,32 @@ if st.button("Berechnung starten", type="primary"):
             st.markdown("---")
             st.subheader("Gewichtsauslastung & Stapelhöhe pro Palette:")
 
-            # Visuelle Progress Bars für jede einzelne Palette
+            # Dynamisch eingefärbte Fortschrittsbalken (je näher an 100%, desto grüner)
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
                 stapelhoehe = round(stapelhoehen[i], 2)
                 
-                auslastung = min(gesamtgewicht / max_gewicht_pro_palette, 1.0)
+                auslastung_wert = (gesamtgewicht / max_gewicht_pro_palette) * 100
+                prozent = min(round(auslastung_wert, 1), 100)
+                
+                # HSL-Farbton: 0 (Rot/Orange) steigt an bis 120 (Sattes Grün bei 100%)
+                hue = int((prozent / 100) * 120)
                 
                 extra_text = f" | Höhe: {stapelhoehe} mm"
                 if stapelhoehe > MAX_STAPELHOEHE_MM:
                     extra_text += " ⚠️ (Über 1000 mm!)"
 
-                st.progress(
-                    auslastung, 
-                    text=f"Palette {i+1}: {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {int(auslastung * 100)}%){extra_text}"
-                )
+                st.markdown(f"""
+                    <div style="margin-bottom: 12px;">
+                        <div style="font-size: 14px; margin-bottom: 4px; color: #FAFAFA;">
+                            <b>Palette {i+1}:</b> {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {prozent}%){extra_text}
+                        </div>
+                        <div style="background-color: #262730; border-radius: 4px; overflow: hidden; height: 14px; width: 100%; border: 1px solid #41424C;">
+                            <div style="background-color: hsl({hue}, 85%, 45%); width: {prozent}%; height: 100%;"></div>
+                        </div>
+                    </div>
+                """, unsafe_allow_html=True)
 
             if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
                 st.markdown("\n⚠️ **Hinweis:** Die Abmessungen könnten Sonderpaletten erfordern. Diese müssen evtl. den IPPC-Standard haben.")
