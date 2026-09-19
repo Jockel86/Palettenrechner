@@ -4,6 +4,21 @@ import streamlit as st
 PE_DICHTE = 0.95
 MAX_STAPELHOEHE_MM = 1000  # Maximale empfohlene Stapelhöhe für das Handling
 
+# Liste der verfügbaren Standard-Paletten-/Plattenmaße (Länge, Breite in mm)
+STANDARD_PALETTEN = [
+    (1100, 1100), (1200, 800), (1100, 1300), 
+    (2050, 1020), (2050, 1250), (3050, 1020), (3050, 1250), 
+    (4050, 1020), (5050, 1020), (6050, 500), (6050, 1020), 
+    (3050, 2080), (4050, 2050), (5050, 2050)
+]
+
+def passt_auf_standardpalette(laenge, breite):
+    """Prüft, ob die Maße auf mindestens eine Standardpalette passen (auch gedreht)."""
+    for pl, pb in STANDARD_PALETTEN:
+        if (laenge <= pl and breite <= pb) or (laenge <= pb and breite <= pl):
+            return True
+    return False
+
 def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1050):
     laenge_meter = laenge_mm / 1000
     breite_meter = breite_mm / 1000
@@ -198,8 +213,9 @@ if st.button("Berechnung starten", type="primary"):
                     </div>
                 """, unsafe_allow_html=True)
 
-            if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
-                st.markdown("\n⚠️ **Hinweis:** Sonderformate. Gegebenenfalls sind konforme Sonderpaletten einzuplanen.")
+            # Automatische Prüfung anhand der hinterlegten Standardmaße
+            if not passt_auf_standardpalette(laenge_mm, breite_mm):
+                st.markdown("\n⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
 
     except Exception as e:
         st.error(f"Fehler: {str(e)}")
