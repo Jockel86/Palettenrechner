@@ -28,7 +28,7 @@ def finde_passende_paletten(laenge, breite):
             passende.append(f"{pl} x {pb} mm")
     return passende
 
-def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1050):
+def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1100):
     laenge_meter = laenge_mm / 1000
     breite_meter = breite_mm / 1000
     staerke_meter = staerke_mm / 1000  # mm zu Meter für die Volumenberechnung
@@ -66,6 +66,33 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, d
 
     return benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen
 
+# Reset-Funktion für den Zurücksetzen-Button
+def reset_form():
+    st.session_state.var_zuschnitt = "Standard"
+    st.session_state.standard_option = "2x1"
+    st.session_state.laenge_mm = 2000
+    st.session_state.breite_mm = 1000
+    st.session_state.dropdown_staerke = "Schnell-Auswahl..."
+    st.session_state.staerke_val = 10
+    st.session_state.stueckzahl = 0
+    st.session_state.max_gewicht_pro_palette = 1100.0
+
+# Session State Initialisierung
+if "var_zuschnitt" not in st.session_state:
+    st.session_state.var_zuschnitt = "Standard"
+if "standard_option" not in st.session_state:
+    st.session_state.standard_option = "2x1"
+if "laenge_mm" not in st.session_state:
+    st.session_state.laenge_mm = 2000
+if "breite_mm" not in st.session_state:
+    st.session_state.breite_mm = 1000
+if "staerke_val" not in st.session_state:
+    st.session_state.staerke_val = 10
+if "stueckzahl" not in st.session_state:
+    st.session_state.stueckzahl = 0
+if "max_gewicht_pro_palette" not in st.session_state:
+    st.session_state.max_gewicht_pro_palette = 1100.0
+
 # Sidebar für Einstellungen / Design-Modus
 st.sidebar.header("Darstellung")
 theme_mode = st.sidebar.radio("Modus wählen:", ["Dunkelmodus", "Hellmodus"])
@@ -102,24 +129,16 @@ st.title("Profi-Stack Planer")
 st.caption("Fokus: PE-Platten (Dichte: 0.95 g/cm³) | Max. empfohlene Stapelhöhe: 1000 mm")
 
 # Auswahl für Zuschnitt
-var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"])
+var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"], key="var_zuschnitt")
 
-standard_option = "2x1"
 if var_zuschnitt == "Standard":
     options = list(STANDARD_MASSE.keys())
-    standard_option = st.selectbox("Wähle eine Standardgröße:", options)
-
-# Eingabefelder für individuelle oder Standardmaße
-if var_zuschnitt == "Individuell":
-    laenge_mm = st.number_input("Länge in mm:", min_value=1, value=2000, step=1)
-    breite_mm = st.number_input("Breite in mm:", min_value=1, value=1000, step=1)
-else:
+    standard_option = st.selectbox("Wähle eine Standardgröße:", options, key="standard_option")
     laenge_mm, breite_mm = STANDARD_MASSE[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
-
-# Session State für die Stärke initialisieren
-if "staerke_val" not in st.session_state:
-    st.session_state.staerke_val = 10
+else:
+    laenge_mm = st.number_input("Länge in mm:", min_value=1, step=1, key="laenge_mm")
+    breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
 
 def update_staerke():
     auswahl = st.session_state.dropdown_staerke
@@ -145,11 +164,18 @@ with col_input:
         key="staerke_val"
     )
 
-stueckzahl = st.number_input("Stückzahl:", min_value=0, value=0, step=1)
-max_gewicht_pro_palette = st.number_input("Maximales Gewicht pro Palette in kg:", value=1050.0, step=50.0)
+stueckzahl = st.number_input("Stückzahl:", min_value=0, step=1, key="stueckzahl")
+max_gewicht_pro_palette = st.number_input("Maximales Gewicht pro Palette in kg:", step=50.0, key="max_gewicht_pro_palette")
 
-# Berechnungs-Button
-if st.button("Berechnung starten", type="primary"):
+# Buttons nebeneinander: Berechnung starten & Neue Berechnung (Reset)
+col_btn1, col_btn2 = st.columns([1, 1])
+with col_btn1:
+    berechnen_gedrueckt = st.button("Berechnung starten", type="primary", use_container_width=True)
+with col_btn2:
+    st.button("Neue Berechnung (Reset)", on_click=reset_form, use_container_width=True)
+
+# Berechnungs-Logik ausführen, wenn Button gedrückt wurde
+if berechnen_gedrueckt:
     try:
         if stueckzahl <= 0:
             st.warning("Bitte gib eine Stückzahl größer als 0 ein.")
