@@ -12,12 +12,13 @@ STANDARD_PALETTEN = [
     (3050, 2080), (4050, 2050), (5050, 2050)
 ]
 
-def passt_auf_standardpalette(laenge, breite):
-    """Prüft, ob die Maße auf mindestens eine Standardpalette passen (auch gedreht)."""
+def finde_passende_paletten(laenge, breite):
+    """Findet alle Standardpaletten, auf die die Plattenmaße (auch gedreht) passen."""
+    passende = []
     for pl, pb in STANDARD_PALETTEN:
         if (laenge <= pl and breite <= pb) or (laenge <= pb and breite <= pl):
-            return True
-    return False
+            passende.append(f"{pl} x {pb} mm")
+    return passende
 
 def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1050):
     laenge_meter = laenge_mm / 1000
@@ -156,6 +157,15 @@ if st.button("Berechnung starten", type="primary"):
                 laenge_mm, breite_mm, staerke_mm, stueckzahl, PE_DICHTE, max_gewicht_pro_palette)
 
             st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
+            
+            # Passende Standardpaletten ermitteln und direkt anzeigen
+            passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
+            if passende_pals:
+                paletten_text = ", ".join(passende_pals)
+                st.info(f"📦 **Verwendbare Standardpalette(n):** {paletten_text}")
+            else:
+                st.warning("⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
+
             st.markdown("---")
 
             # Zusammenfassung gruppieren
@@ -212,10 +222,6 @@ if st.button("Berechnung starten", type="primary"):
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
-
-            # Automatische Prüfung anhand der hinterlegten Standardmaße
-            if not passt_auf_standardpalette(laenge_mm, breite_mm):
-                st.markdown("\n⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
 
     except Exception as e:
         st.error(f"Fehler: {str(e)}")
