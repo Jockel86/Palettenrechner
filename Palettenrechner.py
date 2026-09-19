@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 # Feste Dichte für PE (Polyethylen) in g/cm³ bzw. kg/dm³
 PE_DICHTE = 0.95
@@ -112,35 +113,41 @@ if st.button("Berechnung starten", type="primary"):
             st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
             st.markdown("---")
 
-            # Zusammenfassung gruppieren
-            paletten_ergebnisse = {}
+            # Daten für die Matrix / Tabelle vorbereiten
+            tabellen_daten = []
             fuer_hoehen_warnung = False
-            
+
             for i in range(benoetigte_paletten):
-                stueck = stueckzahlen[i]
-                gesamtgewicht = round(gewichte[i], 2)
-                stapelhoehe = round(stapelhoehen[i], 2)
+                stk = stueckzahlen[i]
+                gew = round(gewichte[i], 2)
+                hoehe = round(stapelhoehen[i], 2)
+                auslastung_pct = round((gew / max_gewicht_pro_palette) * 100, 1)
                 
-                if stapelhoehe > MAX_STAPELHOEHE_MM:
+                if hoehe > MAX_STAPELHOEHE_MM:
                     fuer_hoehen_warnung = True
-
-                key = f"{stueck} Stück"
-                if key in paletten_ergebnisse:
-                    paletten_ergebnisse[key]["count"] += 1
+                    hoehe_str = f"{hoehe} mm ⚠️ (>1m)"
                 else:
-                    paletten_ergebnisse[key] = {"count": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe}
+                    hoehe_str = f"{hoehe} mm"
 
-            for key, value in paletten_ergebnisse.items():
-                hoehen_hinweis = " ⚠️ *(Stapelhöhe > 1000 mm!)*" if value['hoehe'] > MAX_STAPELHOEHE_MM else ""
-                st.write(f"• **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / **{value['hoehe']} mm** hoch*){hoehen_hinweis}")
+                tabellen_daten.append({
+                    "Palette": f"Palette {i+1}",
+                    "Stückzahl": stk,
+                    "Gesamtgewicht": f"{gew} kg",
+                    "Auslastung": f"{auslastung_pct}%",
+                    "Stapelhöhe": höhe_str
+                })
+
+            # DataFrame anzeigen als saubere Matrix
+            df_ergebnis = pd.DataFrame(tabellen_daten)
+            st.dataframe(df_ergebnis, use_container_width=True, hide_index=True)
 
             if fuer_hoehen_warnung:
                 st.warning("⚠️ **Logistik-Hinweis:** Mindestens eine Palette überschreitet die empfohlene maximale Stapelhöhe von 1000 mm. Bitte Handhabung und Kippsicherheit beim Transport prüfen!")
 
             st.markdown("---")
-            st.subheader("Gewichtsauslastung & Stapelhöhe pro Palette:")
+            st.subheader("Gewichtsauslastung pro Palette:")
 
-            # Visuelle Progress Bars und Detailinfo für jede einzelne Palette
+            # Visuelle Progress Bars für jede einzelne Palette
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
