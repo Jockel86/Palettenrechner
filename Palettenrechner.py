@@ -123,7 +123,7 @@ if st.button("Berechnung starten", type="primary"):
                 ergebnis_text += f"- **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / {value['hoehe']} mm hoch*)\n"
 
             if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
-                ergebnis_text += "\n\n⚠️ **Hinweis:** Die Abmessungen könnten Sonderpaletten erfordern. Diese müssen evtl. den IPPC-Standard haben."
+                ergebnis_text += "\n\n⚠️ **Hinweis:** für die Zuschnitte könnten Sonderpaletten erforderlich sein"
 
             st.markdown(ergebnis_text)
 
