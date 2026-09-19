@@ -134,7 +134,7 @@ if st.button("Berechnung starten", type="primary"):
                     "Stückzahl": stk,
                     "Gesamtgewicht": f"{gew} kg",
                     "Auslastung": f"{auslastung_pct}%",
-                    "Stapelhöhe": höhe_str
+                    "Stapelhöhe": hoehe_str
                 })
 
             # DataFrame anzeigen als saubere Matrix
