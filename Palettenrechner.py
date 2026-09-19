@@ -175,4 +175,4 @@ if st.button("Berechnung starten", type="primary"):
 
 # Signatur am Fuß der Seite
 st.markdown("---")
-st.markdown("<div style='text-align: right; color: gray; font-size: 12px;'>J.Vortkamp 2024</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: right; color: gray; font-size: 12px;'>Jochen Vortkamp 2026</div>", unsafe_allow_html=True)
