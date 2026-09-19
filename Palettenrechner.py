@@ -97,7 +97,7 @@ if "max_gewicht_pro_palette" not in st.session_state:
 st.sidebar.header("Darstellung")
 theme_mode = st.sidebar.radio("Modus wählen:", ["Dunkelmodus", "Hellmodus"])
 
-# CSS-Styling je nach gewähltem Modus definieren
+# CSS-Styling je nach gewähltem Modus definieren und Buttons anpassen (Grün / Rot)
 if theme_mode == "Dunkelmodus":
     bg_color = "#0e1117"
     text_color = "#FAFAFA"
@@ -111,7 +111,7 @@ else:
     border_bar_color = "#D1D3D9"
     sidebar_bg = "#F0F2F6"
 
-# CSS-Injektion für echtes Umschalten von Hintergrund und Textfarben
+# CSS-Injektion für Farb-Anpassungen (Hintergrund, Sidebar & Button-Styling)
 st.markdown(f"""
     <style>
     .stApp {{
@@ -120,6 +120,27 @@ st.markdown(f"""
     }}
     [data-testid="stSidebar"] {{
         background-color: {sidebar_bg};
+    }}
+    /* Grüner Button für Berechnung starten */
+    div.stButton > button[kind="primary"] {{
+        background-color: #28a745;
+        border-color: #28a745;
+        color: white;
+    }}
+    div.stButton > button[kind="primary"]:hover {{
+        background-color: #218838;
+        border-color: #1e7e34;
+    }}
+    /* Roter Button für Reset */
+    div.stButton > button:not([kind="primary"]) {{
+        background-color: #dc3545;
+        border-color: #dc3545;
+        color: white;
+    }}
+    div.stButton > button:not([kind="primary"]):hover {{
+        background-color: #c82333;
+        border-color: #bd2130;
+        color: white;
     }}
     </style>
 """, unsafe_allow_html=True)
@@ -167,7 +188,7 @@ with col_input:
 stueckzahl = st.number_input("Stückzahl:", min_value=0, step=1, key="stueckzahl")
 max_gewicht_pro_palette = st.number_input("Maximales Gewicht pro Palette in kg:", step=50.0, key="max_gewicht_pro_palette")
 
-# Buttons nebeneinander: Berechnung starten & Neue Berechnung (Reset)
+# Buttons nebeneinander: Berechnung starten (Grün) & Neue Berechnung / Reset (Rot)
 col_btn1, col_btn2 = st.columns([1, 1])
 with col_btn1:
     berechnen_gedrueckt = st.button("Berechnung starten", type="primary", use_container_width=True)
