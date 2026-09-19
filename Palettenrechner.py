@@ -28,7 +28,7 @@ def finde_passende_paletten(laenge, breite):
             passende.append(f"{pl} x {pb} mm")
     return passende
 
-def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1100):
+def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1080):
     laenge_meter = laenge_mm / 1000
     breite_meter = breite_mm / 1000
     staerke_meter = staerke_mm / 1000  # mm zu Meter für die Volumenberechnung
@@ -223,7 +223,7 @@ if berechnen_gedrueckt:
             # Nur noch Warnung anzeigen, falls es in gar kein Standardmaß passt
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             if not passende_pals:
-                st.warning("⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
+                st.warning("⚠️ **Hinweis:** Sonderformate. Gegebenenfalls sind konforme Sonderpaletten einzuplanen.")
 
             st.markdown("---")
 
