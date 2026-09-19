@@ -173,12 +173,9 @@ if st.button("Berechnung starten", type="primary"):
             else:
                 st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
 
-            # Passende Paletten / Hinweis anzeigen
+            # Nur noch Warnung anzeigen, falls es in gar kein Standardmaß passt
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
-            if passende_pals:
-                paletten_text = ", ".join(passende_pals)
-                st.info(f"📦 **Verwendbare Standardpalette(n):** {paletten_text}")
-            else:
+            if not passende_pals:
                 st.warning("⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
 
             st.markdown("---")
