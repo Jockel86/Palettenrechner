@@ -42,6 +42,20 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, d
 
     return benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen
 
+# Sidebar für Einstellungen / Design-Modus
+st.sidebar.header("Darstellung")
+theme_mode = st.sidebar.radio("Modus wählen:", ["Dunkelmodus", "Hellmodus"])
+
+# Farben je nach Modus für die HTML-Balken definieren
+if theme_mode == "Dunkelmodus":
+    text_color = "#FAFAFA"
+    bg_bar_color = "#262730"
+    border_bar_color = "#41424C"
+else:
+    text_color = "#31333F"
+    bg_bar_color = "#E0E2EC"
+    border_bar_color = "#D1D3D9"
+
 # Streamlit UI
 st.title("Profi-Stack Planer")
 st.caption("Fokus: PE-Platten (Dichte: 0.95 g/cm³) | Max. empfohlene Stapelhöhe: 1000 mm")
@@ -140,7 +154,7 @@ if st.button("Berechnung starten", type="primary"):
             st.markdown("---")
             st.subheader("Gewichtsauslastung & Stapelhöhe pro Palette:")
 
-            # Dynamisch eingefärbte Fortschrittsbalken (je näher an 100%, desto grüner)
+            # Dynamisch eingefärbte Fortschrittsbalken mit angepassten Farben für Hell-/Dunkelmodus
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
@@ -158,10 +172,10 @@ if st.button("Berechnung starten", type="primary"):
 
                 st.markdown(f"""
                     <div style="margin-bottom: 12px;">
-                        <div style="font-size: 14px; margin-bottom: 4px; color: #FAFAFA;">
+                        <div style="font-size: 14px; margin-bottom: 4px; color: {text_color};">
                             <b>Palette {i+1}:</b> {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {prozent}%){extra_text}
                         </div>
-                        <div style="background-color: #262730; border-radius: 4px; overflow: hidden; height: 14px; width: 100%; border: 1px solid #41424C;">
+                        <div style="background-color: {bg_bar_color}; border-radius: 4px; overflow: hidden; height: 14px; width: 100%; border: 1px solid {border_bar_color};">
                             <div style="background-color: hsl({hue}, 85%, 45%); width: {prozent}%; height: 100%;"></div>
                         </div>
                     </div>
