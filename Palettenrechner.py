@@ -9,7 +9,6 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, m
     dichte_material = 1  # kg pro Kubikmeter (Materialdichte)
     gewicht_pro_stueck = volumen_pro_stueck * dichte_material
 
-    # Vermeidung von Division durch Null, falls Stückzahl oder Maße 0 sind
     if gewicht_pro_stueck <= 0 or stueckzahl <= 0:
         return 0, [], [], []
 
@@ -39,7 +38,7 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, m
     return benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen
 
 # Streamlit UI
-st.title("Profi-StackCalc")
+st.title("JV PalettenMaster")
 
 # Auswahl für Zuschnitt
 var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"])
@@ -54,13 +53,12 @@ if var_zuschnitt == "Individuell":
     laenge_mm = st.number_input("Länge in mm:", min_value=1, value=2000, step=1)
     breite_mm = st.number_input("Breite in mm:", min_value=1, value=1000, step=1)
 else:
-    # Voreinstellungen für Standardmaße gemäß der Berechnungslogik im Original
     standard_masse = {
-        "2x1": (2050, 1020), 
-        "2x1.25": (2030, 1250), 
-        "3x1": (3050, 1020), 
-        "3x1.25": (3050, 1250), 
-        "3x2": (3050, 2080)
+        "2x1": (2000, 1000), 
+        "2x1.25": (2000, 1250), 
+        "3x1": (3000, 1000), 
+        "3x1.25": (3000, 1250), 
+        "3x2": (3000, 2000)
     }
     laenge_mm, breite_mm = standard_masse[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
@@ -69,7 +67,6 @@ else:
 if "staerke_val" not in st.session_state:
     st.session_state.staerke_val = 10
 
-# Callback, wenn im Dropdown eine Standardstärke gewählt wird
 def update_staerke():
     auswahl = st.session_state.dropdown_staerke
     if auswahl != "Schnell-Auswahl...":
@@ -106,8 +103,10 @@ if st.button("Berechnung starten", type="primary"):
             benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = berechne_maximale_stueckzahl(
                 laenge_mm, breite_mm, staerke_mm, stueckzahl, max_gewicht_pro_palette)
 
-            ergebnis_text = f"Du benötigst für deine Berechnung **{benoetigte_paletten} Palette(n)**.\n\n"
+            st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
+            st.markdown("---")
 
+            # Zusammenfassung gruppieren
             paletten_ergebnisse = {}
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
@@ -120,16 +119,31 @@ if st.button("Berechnung starten", type="primary"):
                     paletten_ergebnisse[key] = {"count": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe}
 
             for key, value in paletten_ergebnisse.items():
-                ergebnis_text += f"- **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / {value['hoehe']} mm hoch*)\n"
+                st.write(f"• **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / {value['hoehe']} mm hoch*)")
+
+            st.markdown("---")
+            st.subheader("Gewichtsauslastung pro Palette:")
+
+            # Visuelle Progress Bars für jede einzelne Palette
+            for i in range(benoetigte_paletten):
+                stueck = stueckzahlen[i]
+                gesamtgewicht = round(gewichte[i], 2)
+                stapelhoehe = round(stapelhoehen[i], 2)
+                
+                # Prozentualer Anteil vom Maximalgewicht (maximal 1.0 / 100%)
+                auslastung = min(gesamtgewicht / max_gewicht_pro_palette, 1.0)
+                
+                st.progress(
+                    auslastung, 
+                    text=f"Palette {i+1}: {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {int(auslastung * 100)}%)"
+                )
 
             if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
-                ergebnis_text += "\n\n⚠️ **Hinweis:** für die Zuschnitte könnten Sonderpaletten erforderlich sein"
-
-            st.markdown(ergebnis_text)
+                st.markdown("\n⚠️ **Hinweis:** Die Abmessungen könnten Sonderpaletten erfordern. Diese müssen evtl. den IPPC-Standard haben.")
 
     except Exception as e:
         st.error(f"Fehler: {str(e)}")
 
 # Signatur am Fuß der Seite
 st.markdown("---")
-st.markdown("<div style='text-align: right; color: gray; font-size: 12px;'>J.Vortkamp 2026</div>", unsafe_allow_html=True)
+st.markdown("<div style='text-align: right; color: gray; font-size: 12px;'>J.Vortkamp 2024</div>", unsafe_allow_html=True)
