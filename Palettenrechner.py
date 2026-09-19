@@ -2,6 +2,7 @@ import streamlit as st
 
 # Feste Dichte für PE (Polyethylen) in g/cm³ bzw. kg/dm³
 PE_DICHTE = 0.95
+MAX_STAPELHOEHE_MM = 1000  # Maximale empfohlene Stapelhöhe für das Handling
 
 def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1050):
     laenge_meter = laenge_mm / 1000
@@ -43,7 +44,7 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, d
 
 # Streamlit UI
 st.title("JV PalettenMaster")
-st.caption("Fokus: PE-Platten (Dichte: 0.95 g/cm³)")
+st.caption("Fokus: PE-Platten (Dichte: 0.95 g/cm³) | Max. empfohlene Stapelhöhe: 1000 mm")
 
 # Auswahl für Zuschnitt
 var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"])
@@ -113,10 +114,16 @@ if st.button("Berechnung starten", type="primary"):
 
             # Zusammenfassung gruppieren
             paletten_ergebnisse = {}
+            fuer_hoehen_warnung = False
+            
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
                 stapelhoehe = round(stapelhoehen[i], 2)
+                
+                if stapelhoehe > MAX_STAPELHOEHE_MM:
+                    fuer_hoehen_warnung = True
+
                 key = f"{stueck} Stück"
                 if key in paletten_ergebnisse:
                     paletten_ergebnisse[key]["count"] += 1
@@ -124,12 +131,16 @@ if st.button("Berechnung starten", type="primary"):
                     paletten_ergebnisse[key] = {"count": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe}
 
             for key, value in paletten_ergebnisse.items():
-                st.write(f"• **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / {value['hoehe']} mm hoch*)")
+                hoehen_hinweis = " ⚠️ *(Stapelhöhe > 1000 mm!)*" if value['hoehe'] > MAX_STAPELHOEHE_MM else ""
+                st.write(f"• **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / **{value['hoehe']} mm** hoch*){hoehen_hinweis}")
+
+            if fuer_hoehen_warnung:
+                st.warning("⚠️ **Logistik-Hinweis:** Mindestens eine Palette überschreitet die empfohlene maximale Stapelhöhe von 1000 mm. Bitte Handhabung und Kippsicherheit beim Transport prüfen!")
 
             st.markdown("---")
-            st.subheader("Gewichtsauslastung pro Palette:")
+            st.subheader("Gewichtsauslastung & Stapelhöhe pro Palette:")
 
-            # Visuelle Progress Bars für jede einzelne Palette
+            # Visuelle Progress Bars und Detailinfo für jede einzelne Palette
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
@@ -137,9 +148,13 @@ if st.button("Berechnung starten", type="primary"):
                 
                 auslastung = min(gesamtgewicht / max_gewicht_pro_palette, 1.0)
                 
+                extra_text = f" | Höhe: {stapelhoehe} mm"
+                if stapelhoehe > MAX_STAPELHOEHE_MM:
+                    extra_text += " ⚠️ (Über 1000 mm!)"
+
                 st.progress(
                     auslastung, 
-                    text=f"Palette {i+1}: {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {int(auslastung * 100)}%)"
+                    text=f"Palette {i+1}: {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {int(auslastung * 100)}%){extra_text}"
                 )
 
             if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
