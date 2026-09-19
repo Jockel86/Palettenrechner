@@ -85,6 +85,8 @@ if "standard_option" not in st.session_state:
 if "laenge_mm" not in st.session_state:
     st.session_state.laenge_mm = 2000
 if "breite_mm" not in st.session_state:
+    st.session_state.laenge_mm = 2000 # fallback
+if "breite_mm" not in st.session_state:
     st.session_state.breite_mm = 1000
 if "staerke_val" not in st.session_state:
     st.session_state.staerke_val = 10
@@ -104,14 +106,18 @@ if theme_mode == "Dunkelmodus":
     bg_bar_color = "#262730"
     border_bar_color = "#41424C"
     sidebar_bg = "#262730"
+    header_gradient = "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
+    header_border = "#374151"
 else:
     bg_color = "#FFFFFF"
     text_color = "#31333F"
     bg_bar_color = "#E0E2EC"
     border_bar_color = "#D1D3D9"
     sidebar_bg = "#F0F2F6"
+    header_gradient = "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)"
+    header_border = "#e5e7eb"
 
-# CSS-Injektion für Farb-Anpassungen (Hintergrund, Sidebar & Button-Styling)
+# CSS-Injektion für Farb-Anpassungen (Hintergrund, Sidebar, moderner Header & Button-Styling)
 st.markdown(f"""
     <style>
     .stApp {{
@@ -145,9 +151,20 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# Streamlit UI
-st.title("Profi-Stack Planer")
-st.caption("Fokus: PE-Platten (Dichte: 0.95 g/cm³) | Max. empfohlene Stapelhöhe: 1000 mm")
+# Moderner Header-Banner
+st.markdown(f"""
+    <div style="background: {header_gradient}; padding: 22px 26px; border-radius: 12px; border: 1px solid {header_border}; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 32px;">📦</span>
+            <div>
+                <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: {text_color}; letter-spacing: -0.5px;">Profi-Stack Planer</h1>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: {text_color}; opacity: 0.75; font-weight: 400;">
+                    Fokus: PE-Platten (Dichte: 0.95 g/cm³) &bull; Max. empfohlene Stapelhöhe: 1000 mm
+                </p>
+            </div>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
 
 # Auswahl für Zuschnitt
 var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"], key="var_zuschnitt")
@@ -223,7 +240,7 @@ if berechnen_gedrueckt:
             # Nur noch Warnung anzeigen, falls es in gar kein Standardmaß passt
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             if not passende_pals:
-                st.warning("⚠️ **Hinweis:** Sonderformate. Gegebenenfalls sind konforme Sonderpaletten einzuplanen.")
+                st.warning("⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
 
             st.markdown("---")
 
