@@ -199,7 +199,7 @@ if st.button("Berechnung starten", type="primary"):
                 """, unsafe_allow_html=True)
 
             if laenge_mm > 3100 or breite_mm > 1280 or laenge_mm < 2000 or breite_mm < 1000:
-                st.markdown("\n⚠️ **Hinweis:** Die Abmessungen könnten Sonderpaletten erfordern. Diese müssen evtl. den IPPC-Standard haben.")
+                st.markdown("\n⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
 
     except Exception as e:
         st.error(f"Fehler: {str(e)}")
