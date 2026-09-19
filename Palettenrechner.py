@@ -58,14 +58,32 @@ else:
     laenge_mm, breite_mm = standard_masse[standard_option]
     st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
 
-# Stärke: Dropdown mit vordefinierten Werten + Option für individuelle Eingabe mit +/- Buttons
-staerke_optionen = [6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, "Individuell..."]
-ausgewaehlte_staerke = st.selectbox("Stärke in mm:", staerke_optionen, index=2) # Standardmäßig 10 mm (Index 2)
+# Session State für die Stärke initialisieren (damit Dropdown und +/- Buttons perfekt harmonieren)
+if "staerke_val" not in st.session_state:
+    st.session_state.staerke_val = 10
 
-if ausgewaehlte_staerke == "Individuell...":
-    staerke_mm = st.number_input("Individuelle Stärke in mm (in 1mm Schritten):", min_value=1, value=12, step=1)
-else:
-    staerke_mm = int(ausgewaehlte_staerke)
+# Funktion, wenn eine Schnell-Stärke aus dem Dropdown gewählt wird
+def update_staerke_from_dropdown():
+    auswahl = st.session_state.dropdown_staerke
+    if auswahl != "Manuell...":
+        st.session_state.staerke_val = int(auswahl)
+
+# Dropdown als Schnell-Auswahl
+schnell_optionen = ["Manuell...", 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100]
+st.selectbox(
+    "Schnellauswahl Standard-Stärke:", 
+    schnell_optionen, 
+    key="dropdown_staerke", 
+    on_change=update_staerke_from_dropdown
+)
+
+# Das echte Eingabefeld für die Stärke mit den gewünschten +/- Buttons in 1mm Schritten
+staerke_mm = st.number_input(
+    "Stärke in mm:", 
+    min_value=1, 
+    step=1, 
+    key="staerke_val"
+)
 
 stueckzahl = st.number_input("Stückzahl:", min_value=1, value=100, step=1)
 max_gewicht_pro_palette = st.number_input("Maximales Gewicht pro Palette in kg:", value=1050.0, step=50.0)
