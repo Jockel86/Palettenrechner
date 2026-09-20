@@ -180,6 +180,11 @@ else:
         laenge_mm = st.number_input("Länge in mm:", min_value=1, step=1, key="laenge_mm")
     with col_b:
         breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
+    
+    # Prüfen, ob individuelle Maße auf Standardpaletten passen
+    passende_pals_check = finde_passende_paletten(laenge_mm, breite_mm)
+    if not passende_pals_check:
+        st.warning("⚠️ **Hinweis:** Diese Maße passen auf keine gängige Standardpalette. Es müssen ggf. Sonderpaletten gefertigt/eingeplant werden.")
 
 # Stärke nebeneinander: Links die Schnell-Auswahl für Standards, Rechts das Haupt-Zahlenfeld mit +/-
 col_schnell, col_zahl = st.columns([1, 1])
@@ -242,7 +247,7 @@ if berechnen_gedrueckt:
 
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             if not passende_pals:
-                st.warning("⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
+                st.warning("⚠️ **Logistik-Hinweis:** Bei diesen Sondermaßen müssen ggf. Sonderpaletten (IPPC / ISPM 15) eingeplant werden.")
 
             paletten_ergebnisse = {}
             fuer_hoehen_warnung = False
