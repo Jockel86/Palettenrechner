@@ -245,9 +245,10 @@ else:
     with col_b:
         breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
     
+    # Sofortige Prüfung bei individuellen Maßen, ob Standardpaletten überschritten werden
     passende_pals_check = finde_passende_paletten(laenge_mm, breite_mm)
     if not passende_pals_check:
-        st.warning("⚠️ **Hinweis:** Diese Maße passen auf keine gängige Standardpalette. Es müssen ggf. Sonderpaletten gefertigt/eingeplant werden.")
+        st.warning("⚠️ **Hinweis:** Die eingegebenen Maße überschreiten die Abmessungen gängiger Standardpaletten (Länge oder Breite zu groß). Es müssen Sonderpaletten eingeplant werden!")
 
 # Stärke nebeneinander: Links die Schnell-Auswahl für Standards, Rechts das Haupt-Zahlenfeld mit +/-
 col_schnell, col_zahl = st.columns([1, 1])
@@ -311,7 +312,7 @@ if berechnen_gedrueckt:
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             
             if not passende_pals:
-                st.warning("⚠️ **Logistik-Hinweis:** Diese Maße passen auf keine gängige Standardpalette. Es werden Sonderpaletten benötigt!")
+                st.warning("⚠️ **Logistik-Hinweis:** Die eingegebenen Maße überschreiten die Abmessungen gängiger Standardpaletten. Sonderpaletten erforderlich!")
                 
                 auftrag_text = generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette)
                 datei_name = f"Fertigungsauftrag_Sonderpalette_{laenge_mm}x{breite_mm}mm.txt"
@@ -381,7 +382,6 @@ if berechnen_gedrueckt:
                 if stapelhoehe > MAX_STAPELHOEHE_MM:
                     extra_text += " ⚠️ (Über 1000 mm!)"
 
-                # Text-Anpassung, wenn es mehrere Paletten dieses Typs sind
                 paletten_label = f"{anzahl}x Palette" if anzahl > 1 else "1x Palette"
 
                 st.markdown(f"""
