@@ -24,7 +24,10 @@ STANDARD_PALETTEN = [
 def finde_passende_paletten(laenge, breite):
     passende = []
     for pl, pb in STANDARD_PALETTEN:
-        if (laenge <= pl and breite <= pb) or (laenge <= pb and breite <= pl):
+        # Prüfen in Original-Ausrichtung ODER umgedrehter Ausrichtung
+        normal_passt = (laenge <= pl and breite <= pb)
+        gedreht_passt = (laenge <= pb and breite <= pl)
+        if normal_passt or gedreht_passt:
             passende.append(f"{pl} x {pb} mm")
     return passende
 
