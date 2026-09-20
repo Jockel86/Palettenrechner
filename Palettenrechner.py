@@ -72,7 +72,6 @@ def reset_form():
     st.session_state.standard_option = "2x1"
     st.session_state.laenge_mm = 2000
     st.session_state.breite_mm = 1000
-    st.session_state.dropdown_staerke = "Schnell-Auswahl..."
     st.session_state.staerke_val = 10
     st.session_state.stueckzahl = 0
     st.session_state.max_gewicht_pro_palette = 1100.0
@@ -121,7 +120,6 @@ st.markdown(f"""
     [data-testid="stSidebar"] {{
         background-color: {sidebar_bg};
     }}
-    /* Abstände der UI-Elemente verringern, um Platz zu sparen */
     .block-container {{
         padding-top: 2rem;
         padding-bottom: 2rem;
@@ -174,29 +172,14 @@ else:
     with col_b:
         breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
 
-def update_staerke():
-    auswahl = st.session_state.dropdown_staerke
-    if auswahl != "Schnell-Auswahl...":
-        st.session_state.staerke_val = int(auswahl)
-
-# Stärke-Bereich aufteilen: Links das Dropdown, Rechts das Eingabefeld mit +/- Buttons
-col_drop, col_input = st.columns([1, 1])
-
-with col_drop:
-    st.selectbox(
-        "Standard-Stärken:", 
-        ["Schnell-Auswahl...", 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
-        key="dropdown_staerke",
-        on_change=update_staerke
-    )
-
-with col_input:
-    staerke_mm = st.number_input(
-        "Stärke in mm:", 
-        min_value=1, 
-        step=1, 
-        key="staerke_val"
-    )
+# Nur noch EIN kompaktes Feld für die Stärke mit Plus/Minus-Tasten
+staerke_mm = st.number_input(
+    "Plattenstärke in mm (Standard oder per +/- anpassen):", 
+    min_value=1, 
+    max_value=500,
+    step=1, 
+    key="staerke_val"
+)
 
 col_stk, col_gew = st.columns(2)
 with col_stk:
@@ -233,18 +216,15 @@ if berechnen_gedrueckt:
                         break
 
             st.markdown("---")
-            # Hauptausgabe mit integrierter Bezeichnung falls Standard
             if paletten_bezeichnung:
                 st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n) {paletten_bezeichnung}**.")
             else:
                 st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
 
-            # Nur noch Warnung anzeigen, falls es in gar kein Standardmaß passt
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             if not passende_pals:
                 st.warning("⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
 
-            # Zusammenfassung gruppieren
             paletten_ergebnisse = {}
             fuer_hoehen_warnung = False
             
@@ -272,7 +252,6 @@ if berechnen_gedrueckt:
             st.markdown("---")
             st.subheader("Gewichtsauslastung & Stapelhöhe pro Palette:")
 
-            # Dynamisch eingefärbte Fortschrittsbalken
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
