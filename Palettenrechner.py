@@ -11,6 +11,7 @@ STANDARD_MASSE = {
     "3x1": (3050, 1020), 
     "3x1.25": (3050, 1250), 
     "3x2": (3050, 2080)
+    "4x1": (4050, 1020)
 }
 
 # Erweiterte Liste aller Standardpaletten für die Sonderformat-Prüfung
