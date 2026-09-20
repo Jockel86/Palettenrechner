@@ -1,5 +1,37 @@
 import streamlit as st
 
+# --- PASSWORT-SCHUTZ ---
+def check_password():
+    """Gibt True zurück, wenn das Passwort korrekt eingegeben wurde."""
+    def password_entered():
+        if st.session_state["password"] == "1904":
+            st.session_state["password_correct"] = True
+            del st.session_state["password"]  # Passwort aus dem State löschen
+        else:
+            st.session_state["password_correct"] = False
+
+    if "password_correct" not in st.session_state:
+        # Ersteingabe: Zeige Passwortfeld
+        st.markdown("## 🪵 Profi-Stack Planer - Login")
+        st.text_input("Bitte Passwort eingeben, um fortzufahren:", type="password", on_change=password_entered, key="password")
+        return False
+    elif not st.session_state["password_correct"]:
+        # Falsches Passwort wurde eingegeben
+        st.markdown("## 🪵 Profi-Stack Planer - Login")
+        st.text_input("Bitte Passwort eingeben, um fortzufahren:", type="password", on_change=password_entered, key="password")
+        st.error("😕 Das eingegebene Passwort ist leider falsch.")
+        return False
+    else:
+        # Korrektes Passwort eingeloggt
+        return True
+
+# Wenn nicht eingeloggt, hier stoppen (App wird nicht weiter ausgeführt)
+if not check_password():
+    st.stop()
+
+
+# --- AB HIER BEGINNT DAS EIGENTLICHE TOOL ---
+
 # Feste Dichte für PE (Polyethylen) in g/cm³ bzw. kg/dm³
 PE_DICHTE = 0.95
 MAX_STAPELHOEHE_MM = 1000  # Maximale empfohlene Stapelhöhe für das Handling
@@ -24,7 +56,9 @@ STANDARD_PALETTEN = [
 def finde_passende_paletten(laenge, breite):
     passende = []
     for pl, pb in STANDARD_PALETTEN:
-        if (laenge <= pl and breite <= pb) or (laenge <= pb and breite <= pl):
+        normal_passt = (laenge <= pl and breite <= pb)
+        gedreht_passt = (laenge <= pb and breite <= pl)
+        if normal_passt or gedreht_passt:
             passende.append(f"{pl} x {pb} mm")
     return passende
 
