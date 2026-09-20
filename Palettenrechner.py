@@ -14,12 +14,12 @@ def check_password():
 
     if "password_correct" not in st.session_state:
         # Ersteingabe: Zeige Passwortfeld
-        st.markdown("## 🪵 Profi-Stack Planer - Login")
+        st.markdown("## Profi-Stack Planer - Login")
         st.text_input("Bitte Passwort eingeben, um fortzufahren:", type="password", on_change=password_entered, key="password")
         return False
     elif not st.session_state["password_correct"]:
         # Falsches Passwort wurde eingegeben
-        st.markdown("## 🪵 Profi-Stack Planer - Login")
+        st.markdown("## Profi-Stack Planer - Login")
         st.text_input("Bitte Passwort eingeben, um fortzufahren:", type="password", on_change=password_entered, key="password")
         st.error("😕 Das eingegebene Passwort ist leider falsch.")
         return False
@@ -227,10 +227,9 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# Kompakte Überschrift statt großem Banner
+# Kompakte Überschrift ohne Emoji
 st.markdown(f"""
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
-        <span style="font-size: 24px;">🪵</span>
         <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: {text_color};">Profi-Stack Planer</h2>
         <span style="font-size: 12px; opacity: 0.6; margin-left: auto;">PE (0.95 g/cm³) &bull; Max. 1000 mm</span>
     </div>
@@ -251,7 +250,7 @@ else:
     with col_b:
         breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
     
-    # Prüfung mit neuer Toleranz (max. 10 cm größer/breiter)
+    # Prüfung mit Toleranz (max. 10 cm größer/breiter)
     passende_pals_check = finde_passende_paletten(laenge_mm, breite_mm)
     if not passende_pals_check:
         st.warning("⚠️ **Hinweis:** Keine passende Standardpalette innerhalb der 10-cm-Toleranz gefunden. Es müssen Sonderpaletten eingeplant werden!")
