@@ -1,7 +1,6 @@
 import streamlit as st
 from datetime import datetime
 import io
-from fpdf import FPDF
 
 # --- PASSWORT-SCHUTZ ---
 def check_password():
@@ -33,62 +32,32 @@ if not check_password():
     st.stop()
 
 
-# --- HILFSFUNKTION FÜR ECHTE PDF-GENERIERUNG ---
-def generiere_fertigungsauftrag_pdf(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette):
-    """Erstellt ein echtes PDF als Byte-Stream mit fpdf2."""
-    pdf = FPDF()
-    pdf.add_page()
-    
-    # Header / Titel
-    pdf.set_font("helvetica", "B", 16)
-    pdf.cell(0, 10, "FERTIGUNGSAUFTRAG: SONDERPALETTE", new_x="LMARGIN", new_y="NEXT", align="L")
-    
-    pdf.set_font("helvetica", "", 10)
+# --- HILFSFUNKTION FÜR PDF-GENERIERUNG ---
+def generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette):
+    """Erstellt den Text für den Fertigungsauftrag."""
     aktuelles_datum = datetime.now().strftime("%d.%m.%Y")
-    pdf.cell(0, 6, f"Erstellungsdatum: {aktuelles_datum}", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, "Ersteller: Jochen Vortkamp", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, "Status: Dringend / Maßanfertigung", new_x="LMARGIN", new_y="NEXT")
-    
-    pdf.ln(5)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(5)
+    return f"""FERTIGUNGSAUFTRAG: SONDERPALETTE
+==================================================
+Erstellungsdatum: {aktuelles_datum}
+Ersteller: Jochen Vortkamp
+Status: Dringend / Maßanfertigung
 
-    # Technische Spezifikationen
-    pdf.set_font("helvetica", "B", 12)
-    pdf.cell(0, 8, "Technische Spezifikationen", new_x="LMARGIN", new_y="NEXT")
-    
-    pdf.set_font("helvetica", "", 10)
-    pdf.cell(0, 6, f"- Plattenformat (Länge x Breite): {laenge_mm} mm x {breite_mm} mm", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"- Benötigte Paletten-Anzahl: {benoetigte_paletten} Stk.", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"- Max. Belastungsgewicht pro Palette: {max_gewicht_pro_palette} kg", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, "- ISPM 15 / IPPC-Standard: [  ] Erforderlich (Export)", new_x="LMARGIN", new_y="NEXT")
-    
-    pdf.ln(5)
+TECHNISCHE SPEZIFIKATIONEN DER SONDERPALETTE:
+- Plattenformat (Länge x Breite): {laenge_mm} mm x {breite_mm} mm
+- Benötigte Paletten-Anzahl: {benoetigte_paletten} Stk.
+- Max. Belastungsgewicht pro Palette: {max_gewicht_pro_palette} kg
+- ISPM 15 / IPPC-Standard: [ ] Erforderlich (Export)
 
-    # Produktions- und Qualitätscheckliste
-    pdf.set_font("helvetica", "B", 12)
-    pdf.cell(0, 8, "Produktions- und Qualitätscheckliste", new_x="LMARGIN", new_y="NEXT")
-    
-    pdf.set_font("helvetica", "", 10)
-    pdf.cell(0, 6, "[  ] Holz-/Materialzuschnitt nach Maßangabe vorbereiten", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, "[  ] Untergrund- und Klötzchenkonstruktion montieren", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, "[  ] Maßhaltigkeit prüfen (Toleranz max. +- 2 mm)", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, f"[  ] Tragfähigkeit auf mindestens {max_gewicht_pro_palette} kg prüfen / freigeben", new_x="LMARGIN", new_y="NEXT")
-    pdf.cell(0, 6, "[  ] Kennzeichnung / Stempelung anbringen", new_x="LMARGIN", new_y="NEXT")
+PRODUKTIONS- UND QUALITÄTSCHECKLISTE:
+[ ] Holz-/Materialzuschnitt nach Maßangabe vorbereiten
+[ ] Untergrund- und Klötzchenkonstruktion montieren
+[ ] Maßhaltigkeit prüfen (Toleranz max. +- 2 mm)
+[ ] Tragfähigkeit auf mindestens {max_gewicht_pro_palette} kg prüfen / freigeben
+[ ] Kennzeichnung / Stempelung anbringen
 
-    pdf.ln(10)
-    pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-    pdf.ln(5)
-    
-    # Footer-Hinweis
-    pdf.set_font("helvetica", "I", 8)
-    pdf.cell(0, 6, "Generiert automatisch über den Profi-Stack Planer.", new_x="LMARGIN", new_y="NEXT", align="C")
-
-    # Als Byte-Stream zurückgeben (für Streamlit download_button)
-    pdf_output = pdf.output(dest="S")
-    if isinstance(pdf_output, str):
-        pdf_output = pdf_output.encode("latin1")
-    return bytes(pdf_output)
+--------------------------------------------------
+Generiert automatisch über den Profi-Stack Planer.
+"""
 
 
 # --- AB HIER BEGINNT DAS EIGENTLICHE TOOL ---
@@ -342,18 +311,19 @@ if berechnen_gedrueckt:
 
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             
-            # WENN KEINE PASSENDE PALETTE GEFUNDEN WURDE -> SONDERPALETTEN-HINWEIS & PDF-DOWNLOAD-BUTTON
+            # WENN KEINE PASSENDE PALETTE GEFUNDEN WURDE -> SONDERPALETTEN-HINWEIS & DOWNLOAD-BUTTON
             if not passende_pals:
                 st.warning("⚠️ **Logistik-Hinweis:** Diese Maße passen auf keine gängige Standardpalette. Es werden Sonderpaletten benötigt!")
                 
-                pdf_bytes = generiere_fertigungsauftrag_pdf(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette)
-                datei_name = f"Fertigungsauftrag_Sonderpalette_{laenge_mm}x{breite_mm}mm.pdf"
+                auftrag_text = generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette)
+                datei_name = f"Fertigungsauftrag_Sonderpalette_{laenge_mm}x{breite_mm}mm.txt"
                 
+                # Als direkter Download-Button (kann alternativ auch als .txt oder via ReportLab als .pdf ausgegeben werden)
                 st.download_button(
-                    label="📄 Fertigungsauftrag als PDF herunterladen",
-                    data=pdf_bytes,
+                    label="📥 Fertigungsauftrag als Datei herunterladen",
+                    data=auftrag_text,
                     file_name=datei_name,
-                    mime="application/pdf",
+                    mime="text/plain",
                     type="secondary"
                 )
 
