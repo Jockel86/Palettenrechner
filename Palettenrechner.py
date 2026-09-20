@@ -1,4 +1,6 @@
 import streamlit as st
+from datetime import datetime
+import io
 
 # --- PASSWORT-SCHUTZ ---
 def check_password():
@@ -28,6 +30,34 @@ def check_password():
 # Wenn nicht eingeloggt, hier stoppen (App wird nicht weiter ausgeführt)
 if not check_password():
     st.stop()
+
+
+# --- HILFSFUNKTION FÜR PDF-GENERIERUNG ---
+def generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette):
+    """Erstellt den Text für den Fertigungsauftrag."""
+    aktuelles_datum = datetime.now().strftime("%d.%m.%Y")
+    return f"""FERTIGUNGSAUFTRAG: SONDERPALETTE
+==================================================
+Erstellungsdatum: {aktuelles_datum}
+Ersteller: Jochen Vortkamp
+Status: Dringend / Maßanfertigung
+
+TECHNISCHE SPEZIFIKATIONEN DER SONDERPALETTE:
+- Plattenformat (Länge x Breite): {laenge_mm} mm x {breite_mm} mm
+- Benötigte Paletten-Anzahl: {benoetigte_paletten} Stk.
+- Max. Belastungsgewicht pro Palette: {max_gewicht_pro_palette} kg
+- ISPM 15 / IPPC-Standard: [ ] Erforderlich (Export)
+
+PRODUKTIONS- UND QUALITÄTSCHECKLISTE:
+[ ] Holz-/Materialzuschnitt nach Maßangabe vorbereiten
+[ ] Untergrund- und Klötzchenkonstruktion montieren
+[ ] Maßhaltigkeit prüfen (Toleranz max. +- 2 mm)
+[ ] Tragfähigkeit auf mindestens {max_gewicht_pro_palette} kg prüfen / freigeben
+[ ] Kennzeichnung / Stempelung anbringen
+
+--------------------------------------------------
+Generiert automatisch über den Profi-Stack Planer.
+"""
 
 
 # --- AB HIER BEGINNT DAS EIGENTLICHE TOOL ---
@@ -280,8 +310,22 @@ if berechnen_gedrueckt:
                 st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
 
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
+            
+            # WENN KEINE PASSENDE PALETTE GEFUNDEN WURDE -> SONDERPALETTEN-HINWEIS & DOWNLOAD-BUTTON
             if not passende_pals:
-                st.warning("⚠️ **Logistik-Hinweis:** Bei diesen Sondermaßen müssen ggf. Sonderpaletten (IPPC / ISPM 15) eingeplant werden.")
+                st.warning("⚠️ **Logistik-Hinweis:** Diese Maße passen auf keine gängige Standardpalette. Es werden Sonderpaletten benötigt!")
+                
+                auftrag_text = generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette)
+                datei_name = f"Fertigungsauftrag_Sonderpalette_{laenge_mm}x{breite_mm}mm.txt"
+                
+                # Als direkter Download-Button (kann alternativ auch als .txt oder via ReportLab als .pdf ausgegeben werden)
+                st.download_button(
+                    label="📥 Fertigungsauftrag als Datei herunterladen",
+                    data=auftrag_text,
+                    file_name=datei_name,
+                    mime="text/plain",
+                    type="secondary"
+                )
 
             paletten_ergebnisse = {}
             fuer_hoehen_warnung = False
