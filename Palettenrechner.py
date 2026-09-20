@@ -85,8 +85,6 @@ if "standard_option" not in st.session_state:
 if "laenge_mm" not in st.session_state:
     st.session_state.laenge_mm = 2000
 if "breite_mm" not in st.session_state:
-    st.session_state.laenge_mm = 2000 # fallback
-if "breite_mm" not in st.session_state:
     st.session_state.breite_mm = 1000
 if "staerke_val" not in st.session_state:
     st.session_state.staerke_val = 10
@@ -106,18 +104,14 @@ if theme_mode == "Dunkelmodus":
     bg_bar_color = "#262730"
     border_bar_color = "#41424C"
     sidebar_bg = "#262730"
-    header_gradient = "linear-gradient(135deg, #1f2937 0%, #111827 100%)"
-    header_border = "#374151"
 else:
     bg_color = "#FFFFFF"
     text_color = "#31333F"
     bg_bar_color = "#E0E2EC"
     border_bar_color = "#D1D3D9"
     sidebar_bg = "#F0F2F6"
-    header_gradient = "linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%)"
-    header_border = "#e5e7eb"
 
-# CSS-Injektion für Farb-Anpassungen (Hintergrund, Sidebar, moderner Header & Button-Styling)
+# CSS-Injektion für Farb-Anpassungen & kompaktere Abstände
 st.markdown(f"""
     <style>
     .stApp {{
@@ -126,6 +120,11 @@ st.markdown(f"""
     }}
     [data-testid="stSidebar"] {{
         background-color: {sidebar_bg};
+    }}
+    /* Abstände der UI-Elemente verringern, um Platz zu sparen */
+    .block-container {{
+        padding-top: 2rem;
+        padding-bottom: 2rem;
     }}
     /* Grüner Button für Berechnung starten */
     div.stButton > button[kind="primary"] {{
@@ -151,32 +150,29 @@ st.markdown(f"""
     </style>
 """, unsafe_allow_html=True)
 
-# Moderner Header-Banner
+# Kompakte Überschrift statt großem Banner
 st.markdown(f"""
-    <div style="background: {header_gradient}; padding: 22px 26px; border-radius: 12px; border: 1px solid {header_border}; margin-bottom: 25px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 32px;">📦</span>
-            <div>
-                <h1 style="margin: 0; font-size: 26px; font-weight: 700; color: {text_color}; letter-spacing: -0.5px;">Profi-Stack Planer</h1>
-                <p style="margin: 4px 0 0 0; font-size: 13px; color: {text_color}; opacity: 0.75; font-weight: 400;">
-                    Fokus: PE-Platten (Dichte: 0.95 g/cm³) &bull; Max. empfohlene Stapelhöhe: 1000 mm
-                </p>
-            </div>
-        </div>
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+        <span style="font-size: 24px;">🪵</span>
+        <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: {text_color};">Profi-Stack Planer</h2>
+        <span style="font-size: 12px; opacity: 0.6; margin-left: auto;">PE (0.95 g/cm³) &bull; Max. 1000 mm</span>
     </div>
 """, unsafe_allow_html=True)
 
 # Auswahl für Zuschnitt
-var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"], key="var_zuschnitt")
+var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"], key="var_zuschnitt", horizontal=True)
 
 if var_zuschnitt == "Standard":
     options = list(STANDARD_MASSE.keys())
     standard_option = st.selectbox("Wähle eine Standardgröße:", options, key="standard_option")
     laenge_mm, breite_mm = STANDARD_MASSE[standard_option]
-    st.info(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
+    st.caption(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
 else:
-    laenge_mm = st.number_input("Länge in mm:", min_value=1, step=1, key="laenge_mm")
-    breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
+    col_l, col_b = st.columns(2)
+    with col_l:
+        laenge_mm = st.number_input("Länge in mm:", min_value=1, step=1, key="laenge_mm")
+    with col_b:
+        breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
 
 def update_staerke():
     auswahl = st.session_state.dropdown_staerke
@@ -202,8 +198,13 @@ with col_input:
         key="staerke_val"
     )
 
-stueckzahl = st.number_input("Stückzahl:", min_value=0, step=1, key="stueckzahl")
-max_gewicht_pro_palette = st.number_input("Maximales Gewicht pro Palette in kg:", step=50.0, key="max_gewicht_pro_palette")
+col_stk, col_gew = st.columns(2)
+with col_stk:
+    stueckzahl = st.number_input("Stückzahl:", min_value=0, step=1, key="stueckzahl")
+with col_gew:
+    max_gewicht_pro_palette = st.number_input("Max. Gewicht pro Palette (kg):", step=50.0, key="max_gewicht_pro_palette")
+
+st.markdown("")  # Kleiner Abstand
 
 # Buttons nebeneinander: Berechnung starten (Grün) & Neue Berechnung / Reset (Rot)
 col_btn1, col_btn2 = st.columns([1, 1])
@@ -231,6 +232,7 @@ if berechnen_gedrueckt:
                         paletten_bezeichnung = name
                         break
 
+            st.markdown("---")
             # Hauptausgabe mit integrierter Bezeichnung falls Standard
             if paletten_bezeichnung:
                 st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n) {paletten_bezeichnung}**.")
@@ -241,8 +243,6 @@ if berechnen_gedrueckt:
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             if not passende_pals:
                 st.warning("⚠️ **Hinweis:** Bei diesen Maßen handelt es sich um Sonderformate. Gegebenenfalls sind konforme Sonderpaletten (IPPC / ISPM 15) einzuplanen.")
-
-            st.markdown("---")
 
             # Zusammenfassung gruppieren
             paletten_ergebnisse = {}
@@ -267,12 +267,12 @@ if berechnen_gedrueckt:
                 st.write(f"• **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / **{value['hoehe']} mm** hoch*){hoehen_hinweis}")
 
             if fuer_hoehen_warnung:
-                st.warning("⚠️ **Logistik-Hinweis:** Mindestens eine Palette überschreitet die empfohlene maximale Stapelhöhe von 1000 mm. Bitte Handhabung und Kippsicherheit beim Transport prüfen!")
+                st.warning("⚠️ **Logistik-Hinweis:** Mindestens eine Palette überschreitet die empfohlene maximale Stapelhöhe von 1000 mm.")
 
             st.markdown("---")
             st.subheader("Gewichtsauslastung & Stapelhöhe pro Palette:")
 
-            # Dynamisch eingefärbte Fortschrittsbalken mit angepassten Farben für Hell-/Dunkelmodus
+            # Dynamisch eingefärbte Fortschrittsbalken
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
@@ -281,7 +281,6 @@ if berechnen_gedrueckt:
                 auslastung_wert = (gesamtgewicht / max_gewicht_pro_palette) * 100
                 prozent = min(round(auslastung_wert, 1), 100)
                 
-                # HSL-Farbton: 0 (Rot/Orange) steigt an bis 120 (Sattes Grün bei 100%)
                 hue = int((prozent / 100) * 120)
                 
                 extra_text = f" | Höhe: {stapelhoehe} mm"
@@ -289,11 +288,11 @@ if berechnen_gedrueckt:
                     extra_text += " ⚠️ (Über 1000 mm!)"
 
                 st.markdown(f"""
-                    <div style="margin-bottom: 12px;">
-                        <div style="font-size: 14px; margin-bottom: 4px; color: {text_color};">
+                    <div style="margin-bottom: 10px;">
+                        <div style="font-size: 13px; margin-bottom: 3px; color: {text_color};">
                             <b>Palette {i+1}:</b> {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {prozent}%){extra_text}
                         </div>
-                        <div style="background-color: {bg_bar_color}; border-radius: 4px; overflow: hidden; height: 14px; width: 100%; border: 1px solid {border_bar_color};">
+                        <div style="background-color: {bg_bar_color}; border-radius: 4px; overflow: hidden; height: 10px; width: 100%; border: 1px solid {border_bar_color};">
                             <div style="background-color: hsl({hue}, 85%, 45%); width: {prozent}%; height: 100%;"></div>
                         </div>
                     </div>
@@ -304,4 +303,4 @@ if berechnen_gedrueckt:
 
 # Signatur am Fuß der Seite
 st.markdown("---")
-st.markdown(f"<div style='text-align: right; color: gray; font-size: 12px;'>Jochen Vortkamp 2026</div>", unsafe_allow_html=True)
+st.markdown(f"<div style='text-align: right; color: gray; font-size: 11px;'>Jochen Vortkamp 2026</div>", unsafe_allow_html=True)
