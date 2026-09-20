@@ -66,6 +66,12 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, d
 
     return benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen
 
+# Callback-Funktion, wenn im Schnellwahl-Dropdown eine Stärke gewählt wird
+def setze_standard_staerke():
+    auswahl = st.session_state.schnell_staerke
+    if auswahl != "Standard wählen...":
+        st.session_state.staerke_val = int(auswahl)
+
 # Reset-Funktion für den Zurücksetzen-Button
 def reset_form():
     st.session_state.var_zuschnitt = "Standard"
@@ -73,6 +79,7 @@ def reset_form():
     st.session_state.laenge_mm = 2000
     st.session_state.breite_mm = 1000
     st.session_state.staerke_val = 10
+    st.session_state.schnell_staerke = "Standard wählen..."
     st.session_state.stueckzahl = 0
     st.session_state.max_gewicht_pro_palette = 1100.0
 
@@ -87,6 +94,8 @@ if "breite_mm" not in st.session_state:
     st.session_state.breite_mm = 1000
 if "staerke_val" not in st.session_state:
     st.session_state.staerke_val = 10
+if "schnell_staerke" not in st.session_state:
+    st.session_state.schnell_staerke = "Standard wählen..."
 if "stueckzahl" not in st.session_state:
     st.session_state.stueckzahl = 0
 if "max_gewicht_pro_palette" not in st.session_state:
@@ -96,7 +105,7 @@ if "max_gewicht_pro_palette" not in st.session_state:
 st.sidebar.header("Darstellung")
 theme_mode = st.sidebar.radio("Modus wählen:", ["Dunkelmodus", "Hellmodus"])
 
-# CSS-Styling je nach gewähltem Modus definieren und Buttons anpassen (Grün / Rot)
+# CSS-Styling je nach gewähltem Modus definieren
 if theme_mode == "Dunkelmodus":
     bg_color = "#0e1117"
     text_color = "#FAFAFA"
@@ -172,14 +181,25 @@ else:
     with col_b:
         breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
 
-# Nur noch EIN kompaktes Feld für die Stärke mit Plus/Minus-Tasten
-staerke_mm = st.number_input(
-    "Plattenstärke in mm (Standard oder per +/- anpassen):", 
-    min_value=1, 
-    max_value=500,
-    step=1, 
-    key="staerke_val"
-)
+# Stärke nebeneinander: Links die Schnell-Auswahl für Standards, Rechts das Haupt-Zahlenfeld mit +/-
+col_schnell, col_zahl = st.columns([1, 1])
+
+with col_schnell:
+    st.selectbox(
+        "Standard-Stärken wählen:", 
+        ["Standard wählen...", 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
+        key="schnell_staerke",
+        on_change=setze_standard_staerke
+    )
+
+with col_zahl:
+    staerke_mm = st.number_input(
+        "Plattenstärke in mm:", 
+        min_value=1, 
+        max_value=500,
+        step=1, 
+        key="staerke_val"
+    )
 
 col_stk, col_gew = st.columns(2)
 with col_stk:
@@ -205,7 +225,6 @@ if berechnen_gedrueckt:
             benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = berechne_maximale_stueckzahl(
                 laenge_mm, breite_mm, staerke_mm, stueckzahl, PE_DICHTE, max_gewicht_pro_palette)
 
-            # Ermitteln, ob es einem bekannten Standardnamen entspricht
             paletten_bezeichnung = ""
             if var_zuschnitt == "Standard":
                 paletten_bezeichnung = standard_option
