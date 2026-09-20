@@ -85,9 +85,15 @@ STANDARD_PALETTEN = [
 
 def finde_passende_paletten(laenge, breite):
     passende = []
+    # Toleranz: Palette darf maximal 10 cm (100 mm) länger oder breiter sein als der Zuschnitt
+    toleranz_mm = 100
+    
     for pl, pb in STANDARD_PALETTEN:
-        normal_passt = (laenge <= pl and breite <= pb)
-        gedreht_passt = (laenge <= pb and breite <= pl)
+        # Normal ausgerichtet
+        normal_passt = (laenge <= pl) and (breite <= pb) and ((pl - laenge) <= toleranz_mm) and ((pb - breite) <= toleranz_mm)
+        # Gedreht ausgerichtet
+        gedreht_passt = (laenge <= pb) and (breite <= pl) and ((pb - laenge) <= toleranz_mm) and ((pl - breite) <= toleranz_mm)
+        
         if normal_passt or gedreht_passt:
             passende.append(f"{pl} x {pb} mm")
     return passende
@@ -245,10 +251,10 @@ else:
     with col_b:
         breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
     
-    # Sofortige Prüfung bei individuellen Maßen, ob Standardpaletten überschritten werden
+    # Prüfung mit neuer Toleranz (max. 10 cm größer/breiter)
     passende_pals_check = finde_passende_paletten(laenge_mm, breite_mm)
     if not passende_pals_check:
-        st.warning("⚠️ **Hinweis:** Die eingegebenen Maße überschreiten die Abmessungen gängiger Standardpaletten (Länge oder Breite zu groß). Es müssen Sonderpaletten eingeplant werden!")
+        st.warning("⚠️ **Hinweis:** Keine passende Standardpalette innerhalb der 10-cm-Toleranz gefunden. Es müssen Sonderpaletten eingeplant werden!")
 
 # Stärke nebeneinander: Links die Schnell-Auswahl für Standards, Rechts das Haupt-Zahlenfeld mit +/-
 col_schnell, col_zahl = st.columns([1, 1])
@@ -312,7 +318,7 @@ if berechnen_gedrueckt:
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             
             if not passende_pals:
-                st.warning("⚠️ **Logistik-Hinweis:** Die eingegebenen Maße überschreiten die Abmessungen gängiger Standardpaletten. Sonderpaletten erforderlich!")
+                st.warning("⚠️ **Logistik-Hinweis:** Keine passende Standardpalette innerhalb der 10-cm-Toleranz. Sonderpaletten erforderlich!")
                 
                 auftrag_text = generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette)
                 datei_name = f"Fertigungsauftrag_Sonderpalette_{laenge_mm}x{breite_mm}mm.txt"
@@ -359,14 +365,12 @@ if berechnen_gedrueckt:
                 gesamtgewicht = round(gewichte[i], 2)
                 stapelhoehe = round(stapelhoehen[i], 2)
                 
-                # Eindeutiger Schlüssel für identisch gepackte Paletten
                 pack_key = (stueck, gesamtgewicht, stapelhoehe)
                 if pack_key in zusammenfassung:
                     zusammenfassung[pack_key]["anzahl"] += 1
                 else:
                     zusammenfassung[pack_key] = {"anzahl": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe, "stueck": stueck}
 
-            # Balken für jede eindeutige Packvariante ausgeben
             for pack_key, data in zusammenfassung.items():
                 anzahl = data["anzahl"]
                 stueck = data["stueck"]
