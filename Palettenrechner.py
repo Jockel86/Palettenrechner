@@ -245,7 +245,6 @@ else:
     with col_b:
         breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
     
-    # Prüfen, ob individuelle Maße auf Standardpaletten passen
     passende_pals_check = finde_passende_paletten(laenge_mm, breite_mm)
     if not passende_pals_check:
         st.warning("⚠️ **Hinweis:** Diese Maße passen auf keine gängige Standardpalette. Es müssen ggf. Sonderpaletten gefertigt/eingeplant werden.")
@@ -311,14 +310,12 @@ if berechnen_gedrueckt:
 
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
             
-            # WENN KEINE PASSENDE PALETTE GEFUNDEN WURDE -> SONDERPALETTEN-HINWEIS & DOWNLOAD-BUTTON
             if not passende_pals:
                 st.warning("⚠️ **Logistik-Hinweis:** Diese Maße passen auf keine gängige Standardpalette. Es werden Sonderpaletten benötigt!")
                 
                 auftrag_text = generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette)
                 datei_name = f"Fertigungsauftrag_Sonderpalette_{laenge_mm}x{breite_mm}mm.txt"
                 
-                # Als direkter Download-Button (kann alternativ auch als .txt oder via ReportLab als .pdf ausgegeben werden)
                 st.download_button(
                     label="📥 Fertigungsauftrag als Datei herunterladen",
                     data=auftrag_text,
@@ -352,12 +349,28 @@ if berechnen_gedrueckt:
                 st.warning("⚠️ **Logistik-Hinweis:** Mindestens eine Palette überschreitet die empfohlene maximale Stapelhöhe von 1000 mm.")
 
             st.markdown("---")
-            st.subheader("Gewichtsauslastung & Stapelhöhe pro Palette:")
+            st.subheader("Gewichtsauslastung & Stapelhöhe pro Palettentyp:")
 
+            # Zusammengefasste Ansicht der Auslastung (Gruppierung nach identischem Packmuster)
+            zusammenfassung = {}
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
                 stapelhoehe = round(stapelhoehen[i], 2)
+                
+                # Eindeutiger Schlüssel für identisch gepackte Paletten
+                pack_key = (stueck, gesamtgewicht, stapelhoehe)
+                if pack_key in zusammenfassung:
+                    zusammenfassung[pack_key]["anzahl"] += 1
+                else:
+                    zusammenfassung[pack_key] = {"anzahl": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe, "stueck": stueck}
+
+            # Balken für jede eindeutige Packvariante ausgeben
+            for pack_key, data in zusammenfassung.items():
+                anzahl = data["anzahl"]
+                stueck = data["stueck"]
+                gesamtgewicht = data["gewicht"]
+                stapelhoehe = data["hoehe"]
                 
                 auslastung_wert = (gesamtgewicht / max_gewicht_pro_palette) * 100
                 prozent = min(round(auslastung_wert, 1), 100)
@@ -368,10 +381,13 @@ if berechnen_gedrueckt:
                 if stapelhoehe > MAX_STAPELHOEHE_MM:
                     extra_text += " ⚠️ (Über 1000 mm!)"
 
+                # Text-Anpassung, wenn es mehrere Paletten dieses Typs sind
+                paletten_label = f"{anzahl}x Palette" if anzahl > 1 else "1x Palette"
+
                 st.markdown(f"""
-                    <div style="margin-bottom: 10px;">
+                    <div style="margin-bottom: 15px;">
                         <div style="font-size: 13px; margin-bottom: 3px; color: {text_color};">
-                            <b>Palette {i+1}:</b> {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {prozent}%){extra_text}
+                            <b>{paletten_label}:</b> je {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {prozent}%){extra_text}
                         </div>
                         <div style="background-color: {bg_bar_color}; border-radius: 4px; overflow: hidden; height: 10px; width: 100%; border: 1px solid {border_bar_color};">
                             <div style="background-color: hsl({hue}, 85%, 45%); width: {prozent}%; height: 100%;"></div>
