@@ -1,10 +1,13 @@
-import streamlit as st
 from datetime import datetime
 import io
+import streamlit as st
 
 # --- PASSWORT-SCHUTZ ---
+
+
 def check_password():
     """Gibt True zurück, wenn das Passwort korrekt eingegeben wurde."""
+
     def password_entered():
         if st.session_state["password"] == "1904":
             st.session_state["password_correct"] = True
@@ -15,17 +18,28 @@ def check_password():
     if "password_correct" not in st.session_state:
         # Ersteingabe: Zeige Passwortfeld
         st.markdown("## Profi-Stack Planer - Login")
-        st.text_input("Bitte Passwort eingeben, um fortzufahren:", type="password", on_change=password_entered, key="password")
+        st.text_input(
+            "Bitte Passwort eingeben, um fortzufahren:",
+            type="password",
+            on_change=password_entered,
+            key="password",
+        )
         return False
     elif not st.session_state["password_correct"]:
         # Falsches Passwort wurde eingegeben
         st.markdown("## Profi-Stack Planer - Login")
-        st.text_input("Bitte Passwort eingeben, um fortzufahren:", type="password", on_change=password_entered, key="password")
+        st.text_input(
+            "Bitte Passwort eingeben, um fortzufahren:",
+            type="password",
+            on_change=password_entered,
+            key="password",
+        )
         st.error("😕 Das eingegebene Passwort ist leider falsch.")
         return False
     else:
         # Korrektes Passwort eingeloggt
         return True
+
 
 # Wenn nicht eingeloggt, hier stoppen (App wird nicht weiter ausgeführt)
 if not check_password():
@@ -33,7 +47,9 @@ if not check_password():
 
 
 # --- HILFSFUNKTION FÜR PDF-GENERIERUNG ---
-def generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette):
+def generiere_fertigungsauftrag_text(
+    laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette
+):
     """Erstellt den Text für den Fertigungsauftrag."""
     aktuelles_datum = datetime.now().strftime("%d.%m.%Y")
     return f"""FERTIGUNGSAUFTRAG: SONDERPALETTE
@@ -68,54 +84,87 @@ MAX_STAPELHOEHE_MM = 1000  # Maximale empfohlene Stapelhöhe für das Handling
 
 # Mapping für Standard-Namen und deren Maße
 STANDARD_MASSE = {
-    "2x1": (2050, 1020), 
-    "2x1.25": (2030, 1250), 
-    "3x1": (3050, 1020), 
-    "3x1.25": (3050, 1250), 
-    "3x2": (3050, 2080)
+    "2x1": (2050, 1020),
+    "2x1.25": (2030, 1250),
+    "3x1": (3050, 1020),
+    "3x1.25": (3050, 1250),
+    "3x2": (3050, 2080),
 }
 
 # Erweiterte Liste aller Standardpaletten für die Sonderformat-Prüfung
 STANDARD_PALETTEN = [
-    (1100, 1100), (1200, 800), (1100, 1300), 
-    (2050, 1020), (2050, 1250), (3050, 1020), (3050, 1250), 
-    (4050, 1020), (5050, 1020), (6050, 500), (6050, 1020), 
-    (3050, 2080), (4050, 2050), (5050, 2050)
+    (1100, 1100),
+    (1200, 800),
+    (1100, 1300),
+    (2050, 1020),
+    (2050, 1250),
+    (3050, 1020),
+    (3050, 1250),
+    (4050, 1020),
+    (5050, 1020),
+    (6050, 500),
+    (6050, 1020),
+    (3050, 2080),
+    (4050, 2050),
+    (5050, 2050),
 ]
+
 
 def finde_passende_paletten(laenge, breite):
     passende = []
     # Toleranz: Palette darf maximal 10 cm (100 mm) länger oder breiter sein als der Zuschnitt
     toleranz_mm = 100
-    
+
     for pl, pb in STANDARD_PALETTEN:
         # Normal ausgerichtet
-        normal_passt = (laenge <= pl) and (breite <= pb) and ((pl - laenge) <= toleranz_mm) and ((pb - breite) <= toleranz_mm)
+        normal_passt = (
+            (laenge <= pl)
+            and (breite <= pb)
+            and ((pl - laenge) <= toleranz_mm)
+            and ((pb - breite) <= toleranz_mm)
+        )
         # Gedreht ausgerichtet
-        gedreht_passt = (laenge <= pb) and (breite <= pl) and ((pb - laenge) <= toleranz_mm) and ((pl - breite) <= toleranz_mm)
-        
+        gedreht_passt = (
+            (laenge <= pb)
+            and (breite <= pl)
+            and ((pb - laenge) <= toleranz_mm)
+            and ((pl - breite) <= toleranz_mm)
+        )
+
         if normal_passt or gedreht_passt:
             passende.append(f"{pl} x {pb} mm")
     return passende
 
-def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, dichte_material=PE_DICHTE, max_gewicht_pro_palette=1100):
+
+def berechne_maximale_stueckzahl(
+    laenge_mm,
+    breite_mm,
+    staerke_mm,
+    stueckzahl,
+    dichte_material=PE_DICHTE,
+    max_gewicht_pro_palette=1100,
+):
     laenge_meter = laenge_mm / 1000
     breite_meter = breite_mm / 1000
     staerke_meter = staerke_mm / 1000  # mm zu Meter für die Volumenberechnung
 
     volumen_pro_stueck = laenge_meter * breite_meter * staerke_meter
     dichte_kg_m3 = dichte_material * 1000  # Umrechnung in kg/m³
-    
+
     gewicht_pro_stueck = volumen_pro_stueck * dichte_kg_m3
 
     if gewicht_pro_stueck <= 0 or stueckzahl <= 0:
         return 0, [], [], []
 
-    max_stueckzahl_pro_palette = int(max_gewicht_pro_palette / gewicht_pro_stueck)
+    max_stueckzahl_pro_palette = int(
+        max_gewicht_pro_palette / gewicht_pro_stueck
+    )
     if max_stueckzahl_pro_palette <= 0:
         max_stueckzahl_pro_palette = 1
 
-    benoetigte_paletten = (stueckzahl + max_stueckzahl_pro_palette - 1) // max_stueckzahl_pro_palette
+    benoetigte_paletten = (
+        stueckzahl + max_stueckzahl_pro_palette - 1
+    ) // max_stueckzahl_pro_palette
 
     stueckzahl_pro_palette = stueckzahl // benoetigte_paletten
     verbleibende_stueckzahl = stueckzahl % benoetigte_paletten
@@ -136,11 +185,13 @@ def berechne_maximale_stueckzahl(laenge_mm, breite_mm, staerke_mm, stueckzahl, d
 
     return benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen
 
+
 # Callback-Funktion, wenn im Schnellwahl-Dropdown eine Stärke gewählt wird
 def setze_standard_staerke():
     auswahl = st.session_state.schnell_staerke
     if auswahl != "Standard wählen...":
         st.session_state.staerke_val = int(auswahl)
+
 
 # Reset-Funktion für den Zurücksetzen-Button
 def reset_form():
@@ -152,6 +203,7 @@ def reset_form():
     st.session_state.schnell_staerke = "Standard wählen..."
     st.session_state.stueckzahl = 0
     st.session_state.max_gewicht_pro_palette = 1100.0
+
 
 # Session State Initialisierung
 if "var_zuschnitt" not in st.session_state:
@@ -190,7 +242,8 @@ else:
     sidebar_bg = "#F0F2F6"
 
 # CSS-Injektion für Farb-Anpassungen & kompaktere Abstände
-st.markdown(f"""
+st.markdown(
+    f"""
     <style>
     .stApp {{
         background-color: {bg_color};
@@ -225,70 +278,111 @@ st.markdown(f"""
         color: white;
     }}
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Kompakte Überschrift ohne Emoji
-st.markdown(f"""
+st.markdown(
+    f"""
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
         <h2 style="margin: 0; font-size: 22px; font-weight: 700; color: {text_color};">Profi-Stack Planer</h2>
         <span style="font-size: 12px; opacity: 0.6; margin-left: auto;">PE (0.95 g/cm³) &bull; Max. 1000 mm</span>
     </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Auswahl für Zuschnitt
-var_zuschnitt = st.radio("Zuschnitt wählen:", ["Standard", "Individuell"], key="var_zuschnitt", horizontal=True)
+var_zuschnitt = st.radio(
+    "Zuschnitt wählen:", ["Standard", "Individuell"], key="var_zuschnitt", horizontal=True
+)
 
 if var_zuschnitt == "Standard":
     options = list(STANDARD_MASSE.keys())
-    standard_option = st.selectbox("Wähle eine Standardgröße:", options, key="standard_option")
+    standard_option = st.selectbox(
+        "Wähle eine Standardgröße:", options, key="standard_option"
+    )
     laenge_mm, breite_mm = STANDARD_MASSE[standard_option]
-    st.caption(f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm")
+    st.caption(
+        f"Ausgewählte Standardmaße: Länge = {laenge_mm} mm, Breite = {breite_mm} mm"
+    )
 else:
     col_l, col_b = st.columns(2)
     with col_l:
-        laenge_mm = st.number_input("Länge in mm:", min_value=1, step=1, key="laenge_mm")
+        laenge_mm = st.number_input(
+            "Länge in mm:", min_value=1, step=1, key="laenge_mm"
+        )
     with col_b:
-        breite_mm = st.number_input("Breite in mm:", min_value=1, step=1, key="breite_mm")
-    
+        breite_mm = st.number_input(
+            "Breite in mm:", min_value=1, step=1, key="breite_mm"
+        )
+
     # Prüfung mit Toleranz (max. 10 cm größer/breiter)
     passende_pals_check = finde_passende_paletten(laenge_mm, breite_mm)
     if not passende_pals_check:
-        st.warning("⚠️ **Hinweis:** Keine passende Standardpalette innerhalb der 10-cm-Toleranz gefunden. Es müssen Sonderpaletten eingeplant werden!")
+        st.warning(
+            "⚠️ **Hinweis:** Keine passende Standardpalette innerhalb der 10-cm-Toleranz gefunden. Es müssen Sonderpaletten eingeplant werden!"
+        )
 
 # Stärke nebeneinander: Links die Schnell-Auswahl für Standards, Rechts das Haupt-Zahlenfeld mit +/-
 col_schnell, col_zahl = st.columns([1, 1])
 
 with col_schnell:
     st.selectbox(
-        "Standard-Stärken wählen:", 
-        ["Standard wählen...", 6, 8, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100],
+        "Standard-Stärken wählen:",
+        [
+            "Standard wählen...",
+            6,
+            8,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35,
+            40,
+            45,
+            50,
+            60,
+            70,
+            80,
+            90,
+            100,
+        ],
         key="schnell_staerke",
-        on_change=setze_standard_staerke
+        on_change=setze_standard_staerke,
     )
 
 with col_zahl:
     staerke_mm = st.number_input(
-        "Plattenstärke in mm:", 
-        min_value=1, 
+        "Plattenstärke in mm:",
+        min_value=1,
         max_value=500,
-        step=1, 
-        key="staerke_val"
+        step=1,
+        key="staerke_val",
     )
 
 col_stk, col_gew = st.columns(2)
 with col_stk:
     stueckzahl = st.number_input("Stückzahl:", min_value=0, step=1, key="stueckzahl")
 with col_gew:
-    max_gewicht_pro_palette = st.number_input("Max. Gewicht pro Palette (kg):", step=50.0, key="max_gewicht_pro_palette")
+    max_gewicht_pro_palette = st.number_input(
+        "Max. Gewicht pro Palette (kg):", step=50.0, key="max_gewicht_pro_palette"
+    )
 
 st.markdown("")  # Kleiner Abstand
 
 # Buttons nebeneinander: Berechnung starten (Grün) & Neue Berechnung / Reset (Rot)
 col_btn1, col_btn2 = st.columns([1, 1])
 with col_btn1:
-    berechnen_gedrueckt = st.button("Berechnung starten", type="primary", use_container_width=True)
+    berechnen_gedrueckt = st.button(
+        "Berechnung starten", type="primary", use_container_width=True
+    )
 with col_btn2:
-    st.button("Neue Berechnung (Reset)", on_click=reset_form, use_container_width=True)
+    st.button(
+        "Neue Berechnung (Reset)", on_click=reset_form, use_container_width=True
+    )
 
 # Berechnungs-Logik ausführen, wenn Button gedrückt wurde
 if berechnen_gedrueckt:
@@ -296,48 +390,69 @@ if berechnen_gedrueckt:
         if stueckzahl <= 0:
             st.warning("Bitte gib eine Stückzahl größer als 0 ein.")
         else:
-            benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = berechne_maximale_stueckzahl(
-                laenge_mm, breite_mm, staerke_mm, stueckzahl, PE_DICHTE, max_gewicht_pro_palette)
+            benoetigte_paletten, stueckzahlen, gewichte, stapelhoehen = (
+                berechne_maximale_stueckzahl(
+                    laenge_mm,
+                    breite_mm,
+                    staerke_mm,
+                    stueckzahl,
+                    PE_DICHTE,
+                    max_gewicht_pro_palette,
+                )
+            )
 
             paletten_bezeichnung = ""
             if var_zuschnitt == "Standard":
                 paletten_bezeichnung = standard_option
             else:
                 for name, (l, b) in STANDARD_MASSE.items():
-                    if (laenge_mm == l and breite_mm == b) or (laenge_mm == b and breite_mm == l):
+                    if (laenge_mm == l and breite_mm == b) or (
+                        laenge_mm == b and breite_mm == l
+                    ):
                         paletten_bezeichnung = name
                         break
 
             st.markdown("---")
             if paletten_bezeichnung:
-                st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n) {paletten_bezeichnung}**.")
+                st.markdown(
+                    f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n) {paletten_bezeichnung}**."
+                )
             else:
-                st.markdown(f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**.")
+                st.markdown(
+                    f"### Du benötigst insgesamt **{benoetigte_paletten} Palette(n)**."
+                )
 
             passende_pals = finde_passende_paletten(laenge_mm, breite_mm)
-            
+
             if not passende_pals:
-                st.warning("⚠️ **Logistik-Hinweis:** Keine passende Standardpalette innerhalb der 10-cm-Toleranz. Sonderpaletten erforderlich!")
-                
-                auftrag_text = generiere_fertigungsauftrag_text(laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette)
+                st.warning(
+                    "⚠️ **Logistik-Hinweis:** Keine passende Standardpalette innerhalb der 10-cm-Toleranz. Sonderpaletten erforderlich!"
+                )
+
+                auftrag_text = generiere_fertigungsauftrag_text(
+                    laenge_mm,
+                    breite_mm,
+                    benoetigte_paletten,
+                    max_gewicht_pro_palette,
+                )
                 datei_name = f"Fertigungsauftrag_Sonderpalette_{laenge_mm}x{breite_mm}mm.txt"
-                
+
                 st.download_button(
                     label="📥 Fertigungsauftrag als Datei herunterladen",
                     data=auftrag_text,
                     file_name=datei_name,
                     mime="text/plain",
-                    type="secondary"
+                    type="secondary",
                 )
 
             paletten_ergebnisse = {}
             fuer_hoehen_warnung = False
-            
+
             for i in range(benoetigte_paletten):
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
                 stapelhoehe = round(stapelhoehen[i], 2)
-                
+
                 if stapelhoehe > MAX_STAPELHOEHE_MM:
                     fuer_hoehen_warnung = True
 
@@ -345,17 +460,31 @@ if berechnen_gedrueckt:
                 if key in paletten_ergebnisse:
                     paletten_ergebnisse[key]["count"] += 1
                 else:
-                    paletten_ergebnisse[key] = {"count": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe}
+                    paletten_ergebnisse[key] = {
+                        "count": 1,
+                        "gewicht": gesamtgewicht,
+                        "hoehe": stapelhoehe,
+                    }
 
             for key, value in paletten_ergebnisse.items():
-                hoehen_hinweis = " ⚠️ *(Stapelhöhe > 1000 mm!)*" if value['hoehe'] > MAX_STAPELHOEHE_MM else ""
-                st.write(f"• **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / **{value['hoehe']} mm** hoch*){hoehen_hinweis}")
+                hoehen_hinweis = (
+                    " ⚠️ *(Stapelhöhe > 1000 mm!)*"
+                    if value["hoehe"] > MAX_STAPELHOEHE_MM
+                    else ""
+                )
+                st.write(
+                    f"• **{value['count']} Palette(n)** mit {key} (*{value['gewicht']} kg / **{value['hoehe']} mm** hoch*){hoehen_hinweis}"
+                )
 
             if fuer_hoehen_warnung:
-                st.warning("⚠️ **Logistik-Hinweis:** Mindestens eine Palette überschreitet die empfohlene maximale Stapelhöhe von 1000 mm.")
+                st.warning(
+                    "⚠️ **Logistik-Hinweis:** Mindestens eine Palette überschreitet die empfohlene maximale Stapelhöhe von 1000 mm."
+                )
 
             st.markdown("---")
-            st.subheader("Gewichtsauslastung & Stapelhöhe pro Palettentyp:")
+            st.subheader(
+                "Gewichtsauslastung & Stapelhöhe pro Palettentyp:"
+            )
 
             # Zusammengefasste Ansicht der Auslastung (Gruppierung nach identischem Packmuster)
             zusammenfassung = {}
@@ -363,31 +492,41 @@ if berechnen_gedrueckt:
                 stueck = stueckzahlen[i]
                 gesamtgewicht = round(gewichte[i], 2)
                 stapelhoehe = round(stapelhoehen[i], 2)
-                
+
                 pack_key = (stueck, gesamtgewicht, stapelhoehe)
                 if pack_key in zusammenfassung:
                     zusammenfassung[pack_key]["anzahl"] += 1
                 else:
-                    zusammenfassung[pack_key] = {"anzahl": 1, "gewicht": gesamtgewicht, "hoehe": stapelhoehe, "stueck": stueck}
+                    zusammenfassung[pack_key] = {
+                        "anzahl": 1,
+                        "gewicht": gesamtgewicht,
+                        "hoehe": stapelhoehe,
+                        "stueck": stueck,
+                    }
 
             for pack_key, data in zusammenfassung.items():
                 anzahl = data["anzahl"]
                 stueck = data["stueck"]
                 gesamtgewicht = data["gewicht"]
                 stapelhoehe = data["hoehe"]
-                
-                auslastung_wert = (gesamtgewicht / max_gewicht_pro_palette) * 100
+
+                auslastung_wert = (
+                    gesamtgewicht / max_gewicht_pro_palette
+                ) * 100
                 prozent = min(round(auslastung_wert, 1), 100)
-                
+
                 hue = int((prozent / 100) * 120)
-                
+
                 extra_text = f" | Höhe: {stapelhoehe} mm"
                 if stapelhoehe > MAX_STAPELHOEHE_MM:
                     extra_text += " ⚠️ (Über 1000 mm!)"
 
-                paletten_label = f"{anzahl}x Palette" if anzahl > 1 else "1x Palette"
+                paletten_label = (
+                    f"{anzahl}x Palette" if anzahl > 1 else "1x Palette"
+                )
 
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                     <div style="margin-bottom: 15px;">
                         <div style="font-size: 13px; margin-bottom: 3px; color: {text_color};">
                             <b>{paletten_label}:</b> je {stueck} Stück ({gesamtgewicht} kg von {max_gewicht_pro_palette} kg | {prozent}%){extra_text}
@@ -396,11 +535,16 @@ if berechnen_gedrueckt:
                             <div style="background-color: hsl({hue}, 85%, 45%); width: {prozent}%; height: 100%;"></div>
                         </div>
                     </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
 
     except Exception as e:
         st.error(f"Fehler: {str(e)}")
 
 # Signatur am Fuß der Seite
 st.markdown("---")
-st.markdown(f"<div style='text-align: right; color: gray; font-size: 11px;'>Jochen Vortkamp 2026</div>", unsafe_allow_html=True)
+st.markdown(
+    f"<div style='text-align: right; color: gray; font-size: 11px;'>Jochen Vortkamp 2026</div>",
+    unsafe_allow_html=True,
+)
