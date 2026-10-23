@@ -2,60 +2,16 @@ from datetime import datetime
 import io
 import streamlit as st
 
-# --- PASSWORT-SCHUTZ ---
-
-
-def check_password():
-    """Gibt True zurück, wenn das Passwort korrekt eingegeben wurde."""
-
-    def password_entered():
-        if st.session_state["password"] == "1904":
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Passwort aus dem State löschen
-        else:
-            st.session_state["password_correct"] = False
-
-    if "password_correct" not in st.session_state:
-        # Ersteingabe: Zeige Passwortfeld
-        st.markdown("## Profi-Stack Planer - Login")
-        st.text_input(
-            "Bitte Passwort eingeben, um fortzufahren:",
-            type="password",
-            on_change=password_entered,
-            key="password",
-        )
-        return False
-    elif not st.session_state["password_correct"]:
-        # Falsches Passwort wurde eingegeben
-        st.markdown("## Profi-Stack Planer - Login")
-        st.text_input(
-            "Bitte Passwort eingeben, um fortzufahren:",
-            type="password",
-            on_change=password_entered,
-            key="password",
-        )
-        st.error("😕 Das eingegebene Passwort ist leider falsch.")
-        return False
-    else:
-        # Korrektes Passwort eingeloggt
-        return True
-
-
-# Wenn nicht eingeloggt, hier stoppen (App wird nicht weiter ausgeführt)
-if not check_password():
-    st.stop()
-
 
 # --- HILFSFUNKTION FÜR PDF-GENERIERUNG ---
 def generiere_fertigungsauftrag_text(
     laenge_mm, breite_mm, benoetigte_paletten, max_gewicht_pro_palette
 ):
-    """Erstellt den Text für den Fertigungsauftrag."""
+    """Erstellt den Text für den Fertigungsauftrag (ohne Mitarbeiternamen)."""
     aktuelles_datum = datetime.now().strftime("%d.%m.%Y")
     return f"""FERTIGUNGSAUFTRAG: SONDERPALETTE
 ==================================================
 Erstellungsdatum: {aktuelles_datum}
-Ersteller: Jochen Vortkamp
 Status: Dringend / Maßanfertigung
 
 TECHNISCHE SPEZIFIKATIONEN DER SONDERPALETTE:
