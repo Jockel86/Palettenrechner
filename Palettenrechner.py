@@ -38,13 +38,16 @@ Generiert automatisch über den Profi-Stack Planer.
 PE_DICHTE = 0.95
 MAX_STAPELHOEHE_MM = 1000  # Maximale empfohlene Stapelhöhe für das Handling
 
-# Mapping für Standard-Namen und deren Maße
+# Mapping für Standard-Namen und deren Maße (inkl. neuer Formate)
 STANDARD_MASSE = {
     "2x1": (2050, 1020),
     "2x1.25": (2030, 1250),
     "3x1": (3050, 1020),
     "3x1.25": (3050, 1250),
     "3x2": (3050, 2080),
+    "3x2.5": (3050, 2560),
+    "4x1": (4050, 1020),
+    "4x2": (4050, 2080),
 }
 
 # Erweiterte Liste aller Standardpaletten für die Sonderformat-Prüfung
@@ -61,7 +64,9 @@ STANDARD_PALETTEN = [
     (6050, 500),
     (6050, 1020),
     (3050, 2080),
+    (3050, 2560),
     (4050, 2050),
+    (4050, 2080),
     (5050, 2050),
 ]
 
